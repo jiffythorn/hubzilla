@@ -124,16 +124,19 @@ class Cron {
 
 		// Clean expired photos from cache
 
+		$default_epire_days = intval(Config::Get('system', 'default_expire_days', 30));
+
 		$r = q("SELECT DISTINCT xchan, content FROM photo WHERE photo_usage = %d AND expires < %s - INTERVAL %s",
 			intval(PHOTO_CACHE),
 			db_utcnow(),
-			db_quoteinterval(Config::Get('system', 'default_expire_days', 30) . ' DAY')
+			db_quoteinterval($default_epire_days . ' DAY')
 		);
+
 		if ($r) {
 			q("DELETE FROM photo WHERE photo_usage = %d AND expires < %s - INTERVAL %s",
 				intval(PHOTO_CACHE),
 				db_utcnow(),
-				db_quoteinterval(Config::Get('system', 'default_expire_days', 30) . ' DAY')
+				db_quoteinterval($default_epire_days . ' DAY')
 			);
 
 			foreach ($r as $rr) {
