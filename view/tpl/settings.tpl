@@ -75,7 +75,7 @@
 								{{include file="field_intcheckbox.tpl" field=$notify5}}
 								{{include file="field_intcheckbox.tpl" field=$notify6}}
 								{{include file="field_intcheckbox.tpl" field=$notify7}}
-								{{include file="field_intcheckbox.tpl" field=$notify8}}
+								{{*include file="field_intcheckbox.tpl" field=$notify8*}}
 							</div>
 							<h3>{{$lbl_vnot}}</h3>
 							<div class="group">

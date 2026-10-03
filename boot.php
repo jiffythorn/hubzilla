@@ -449,7 +449,7 @@ define('NOTIFY_SUGGEST', 0x0020);
 define('NOTIFY_PROFILE', 0x0040);
 define('NOTIFY_TAGSELF', 0x0080);
 define('NOTIFY_TAGSHARE', 0x0100);
-define('NOTIFY_POKE', 0x0200);
+define('NOTIFY_POKE', 0x0200); // Not used
 define('NOTIFY_LIKE', 0x0400);
 
 define('NOTIFY_SYSTEM', 0x8000);
@@ -466,7 +466,7 @@ define('VNOTIFY_EVENTTODAY', 0x0010);
 define('VNOTIFY_BIRTHDAY', 0x0020);
 define('VNOTIFY_SYSTEM', 0x0040);
 define('VNOTIFY_INFO', 0x0080);
-define('VNOTIFY_ALERT', 0x0100);
+define('VNOTIFY_ALERT', 0x0100); // Not used
 define('VNOTIFY_INTRO', 0x0200);
 define('VNOTIFY_REGISTER', 0x0400);
 define('VNOTIFY_FILES', 0x0800);
