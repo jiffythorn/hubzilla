@@ -59,26 +59,24 @@
 							{{include file="field_input.tpl" field=$mailhost}}
 
 							<h3>{{$activity_options}}</h3>
-							<div class="group">
+							<div class="mb-3">
 								{{*not yet implemented *}}
 								{{*include file="field_checkbox.tpl" field=$post_joingroup*}}
 								{{include file="field_checkbox.tpl" field=$post_newfriend}}
 								{{include file="field_checkbox.tpl" field=$post_profilechange}}
 							</div>
 							<h3>{{$lbl_not}}</h3>
-							<div class="group">
+							<div class="mb-3">
 								{{include file="field_intcheckbox.tpl" field=$notify1}}
 								{{include file="field_intcheckbox.tpl" field=$notify2}}
 								{{include file="field_intcheckbox.tpl" field=$notify3}}
 								{{include file="field_intcheckbox.tpl" field=$notify4}}
-								{{*include file="field_intcheckbox.tpl" field=$notify9*}}
 								{{include file="field_intcheckbox.tpl" field=$notify5}}
 								{{include file="field_intcheckbox.tpl" field=$notify6}}
 								{{include file="field_intcheckbox.tpl" field=$notify7}}
-								{{*include file="field_intcheckbox.tpl" field=$notify8*}}
 							</div>
 							<h3>{{$lbl_vnot}}</h3>
-							<div class="group">
+							<div class="mb-3">
 								{{include file="field_intcheckbox.tpl" field=$vnotify1}}
 								{{include file="field_intcheckbox.tpl" field=$vnotify2}}
 								{{include file="field_intcheckbox.tpl" field=$vnotify3}}
@@ -87,8 +85,8 @@
 								{{include file="field_intcheckbox.tpl" field=$vnotify6}}
 								{{include file="field_intcheckbox.tpl" field=$vnotify10}}
 								{{include file="field_intcheckbox.tpl" field=$vnotify7}}
-								{{include file="field_intcheckbox.tpl" field=$vnotify8}}
-								{{include file="field_intcheckbox.tpl" field=$vnotify9}}
+								{{*include file="field_intcheckbox.tpl" field=$vnotify8*}}
+								{{*include file="field_intcheckbox.tpl" field=$vnotify9*}}
 								{{if $vnotify11}}
 									{{include file="field_intcheckbox.tpl" field=$vnotify11}}
 								{{/if}}
