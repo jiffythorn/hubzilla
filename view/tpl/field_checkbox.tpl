@@ -20,8 +20,10 @@
 		.required, .code
 		.form-control, .form-text, .text-muted
 *}}
-<div id="{{$field.0}}_container" class="clearfix checkbox mb-3">
+
+<div id="{{$field.0}}_container" class="form-check mb-3">
 	<input
+		class="form-check-input"
 		type="checkbox"
 		name="{{$field.0}}"
 		id="id_{{$field.0}}"
@@ -29,6 +31,8 @@
 		{{if $field.2}}checked="checked"{{/if}}
 		{{if $field.5}}{{$field.5}}{{/if}}
 		>
-	<label for="id_{{$field.0}}">{{$field.1}}{{if $field.6}}<sup class="required zuiqmid"> {{$field.6}}</sup>{{/if}}</label>
+	<label for="id_{{$field.0}}" class="form-check-label">
+		{{$field.1}}{{if $field.6}}<sup class="required zuiqmid"> {{$field.6}}</sup>{{/if}}
+	</label>
 	<div class="form-text text-muted">{{$field.3}}</div>
 </div>
