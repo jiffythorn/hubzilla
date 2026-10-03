@@ -55,7 +55,7 @@ class Cron_daily {
 		$r = dbq("select channel_id from channel where channel_removed = 0");
 		if ($r) {
 			foreach ($r as $rr) {
-				$mark_seen_days = get_pconfig($rr['channel_id'], 'system', 'mark_seen_days', 90);
+				$mark_seen_days = intval(get_pconfig($rr['channel_id'], 'system', 'mark_seen_days', 90));
 				q("UPDATE item SET item_unseen = 0 WHERE
 					uid = %d AND item_unseen = 1
 					AND created < %s - INTERVAL %s",
@@ -66,10 +66,12 @@ class Cron_daily {
 			}
 		}
 
+		$cache_expire_days = intval(Config::Get('system', 'cache_expire_days', 7));
+
 		// Clean up cache
 		q("DELETE FROM cache WHERE updated < %s - INTERVAL %s",
 			db_utcnow(),
-			db_quoteinterval(Config::Get('system', 'cache_expire_days', 7) . ' DAY')
+			db_quoteinterval($cache_expire_days . ' DAY')
 		);
 
 		//update statistics in config

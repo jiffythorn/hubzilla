@@ -20,16 +20,15 @@ class Cache {
 
 	public static function get($key, $age = '') {
 		$hash = uuid_from_url($key);
+		$object_cache_days = intval(Config::Get('system','object_cache_days', '30'));
 
 		$r = q("SELECT v FROM cache WHERE k = '%s' AND updated > %s - INTERVAL %s LIMIT 1",
 			dbesc($hash),
 			db_utcnow(),
-			db_quoteinterval(($age ? $age : Config::Get('system','object_cache_days', '30') . ' DAY'))
+			db_quoteinterval(($age ? $age : $object_cache_days . ' DAY'))
 		);
 
-		if ($r)
-			return $r[0]['v'];
-		return null;
+		return $r[0]['v'] ?? null;
 	}
 
 	public static function set($key,$value) {
