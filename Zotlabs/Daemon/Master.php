@@ -5,66 +5,30 @@ namespace Zotlabs\Daemon;
 use Zotlabs\Lib\QueueWorker;
 
 if (array_search(__file__, get_included_files()) === 0) {
-	require_once('include/cli_startup.php');
 	array_shift($argv);
-	$argc = count($argv);
 
-	if ($argc)
-		Master::Release($argc, $argv);
+	if (!empty($argv)) {
+		require_once('include/cli_startup.php');
+		cli_startup();
+		Master::Release($argv);
+	}
 
 	return;
 }
 
 
 class Master {
-
-	static public function Summon($arr) {
-
-		QueueWorker::Summon($arr);
+	static public function Summon($arr)
+	{
+		$queueWorker = new QueueWorker($arr);
+		$queueWorker->summon();
 		return;
-/*
-		$hookinfo = [
-			'argv' => $arr
-		];
-
-		call_hooks('daemon_master_summon', $hookinfo);
-
-		$arr  = $hookinfo['argv'];
-		$argc = count($arr);
-
-		if ((!is_array($arr) || ($argc < 1))) {
-			logger("Summon handled by hook.", LOGGER_DEBUG);
-			return;
-		}
-
-		$phpbin = Config::Get('system', 'phpbin', 'php');
-		proc_run($phpbin, 'Zotlabs/Daemon/Master.php', $arr);
-*/
 	}
 
-	static public function Release($argc, $argv) {
-		cli_startup();
-
-		QueueWorker::Release($argv);
+	static public function Release($arr)
+	{
+		$queueWorker = new QueueWorker($arr);
+		$queueWorker->release();
 		return;
-/*
-		$hookinfo = [
-			'argv' => $argv
-		];
-
-		call_hooks('daemon_master_release', $hookinfo);
-
-		$argv = $hookinfo['argv'];
-		$argc = count($argv);
-
-		if ((!is_array($argv) || ($argc < 1))) {
-			logger("Release handled by hook.", LOGGER_DEBUG);
-			return;
-		}
-
-		logger('Master: release: ' . json_encode($argv), LOGGER_ALL, LOG_DEBUG);
-		$cls = '\\Zotlabs\\Daemon\\' . $argv[0];
-		$cls::run($argc, $argv);
-*/
 	}
 }

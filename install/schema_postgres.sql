@@ -1674,3 +1674,10 @@ CREATE INDEX idx_workerq_priority ON workerq (workerq_priority);
 CREATE INDEX idx_workerq_reservationid ON workerq (workerq_reservationid);
 CREATE INDEX idx_workerq_processtimeout ON workerq (workerq_processtimeout);
 CREATE INDEX idx_workerq_uuid ON workerq (workerq_uuid);
+
+CREATE TABLE mutex (
+    mutex_name varchar(64) NOT NULL,
+    created timestamp NOT NULL DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC'),
+    PRIMARY KEY (mutex_name)
+);
+INSERT INTO mutex (mutex_name) VALUES ('queueworker');

@@ -13,23 +13,15 @@ class Queueworker extends Controller {
 	}
 
 	function post() {
-
 		check_form_security_token('form_security_token', 'queueworker');
 
 		$maxqueueworkers = intval($_POST['queueworker_maxworkers']);
-		$maxqueueworkers = ($maxqueueworkers > 3) ? $maxqueueworkers : 4;
+		$maxqueueworkers = ($maxqueueworkers > 1) ? $maxqueueworkers : 4;
 		Config::Set('queueworker', 'max_queueworkers', $maxqueueworkers);
 
 		$maxworkerage = intval($_POST['queueworker_max_age']);
 		$maxworkerage = ($maxworkerage >= 120) ? $maxworkerage : 300;
 		Config::Set('queueworker', 'queueworker_max_age', $maxworkerage);
-
-		$queueworkersleep = intval($_POST['queue_worker_sleep']);
-		$queueworkersleep = ($queueworkersleep > 100) ? $queueworkersleep : 100;
-		Config::Set('queueworker', 'queue_worker_sleep', $queueworkersleep);
-
-		$auto_queue_worker_sleep = intval($_POST['auto_queue_worker_sleep']);
-		Config::Set('queueworker', 'auto_queue_worker_sleep', $auto_queue_worker_sleep);
 
 		goaway(z_root() . '/admin/queueworker');
 	}
@@ -56,7 +48,7 @@ class Queueworker extends Controller {
 		}
 
 		$maxqueueworkers = Config::Get('queueworker', 'max_queueworkers', 4);
-		$maxqueueworkers = ($maxqueueworkers > 3) ? $maxqueueworkers : 4;
+		$maxqueueworkers = ($maxqueueworkers > 1) ? $maxqueueworkers : 4;
 
 		$sc = '';
 
@@ -65,7 +57,7 @@ class Queueworker extends Controller {
 				'queueworker_maxworkers',
 				t('Max queueworker threads'),
 				$maxqueueworkers,
-				t('Minimum 4, default 4')
+				t('Minimum 2, default 4')
 			]
 		]);
 
@@ -78,30 +70,6 @@ class Queueworker extends Controller {
 				t('Assume workers dead after'),
 				$workermaxage,
 				t('Minimum 120, default 300 seconds')
-			]
-		]);
-
-		$queueworkersleep = Config::Get('queueworker', 'queue_worker_sleep');
-		$queueworkersleep = ($queueworkersleep > 100) ? $queueworkersleep : 100;
-
-		$auto_queue_worker_sleep = Config::Get('queueworker', 'auto_queue_worker_sleep', 0);
-
-		$sc .= replace_macros(get_markup_template('field_input.tpl'), [
-			'$field' => [
-				'queue_worker_sleep',
-				t('Pause before starting next task'),
-				$queueworkersleep,
-				t('Minimum 100, default 100 microseconds'),
-				'',
-				(($auto_queue_worker_sleep) ? 'disabled' : '')
-			]
-		]);
-
-		$sc .= replace_macros(get_markup_template('field_checkbox.tpl'), [
-			'$field' => [
-				'auto_queue_worker_sleep',
-				t('Automatically adjust pause before starting next task'),
-				$auto_queue_worker_sleep,
 			]
 		]);
 

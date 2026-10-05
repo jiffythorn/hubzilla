@@ -136,8 +136,6 @@ class Libsync {
 				$info['collection_members'] = $r;
 		}
 
-		$interval = Config::Get('queueworker', 'queue_interval', 500000);
-
 		logger('Packet: ' . print_r($info, true), LOGGER_DATA, LOG_DEBUG);
 
 		$total = count($synchubs);
@@ -154,27 +152,7 @@ class Libsync {
 				'msg'        => EMPTY_STR
 			]);
 
-
-			/*
-			$x = q("select count(outq_hash) as total from outq where outq_delivered = 0");
-
-			if (intval($x[0]['total']) > intval(Config::Get('system', 'force_queue_threshold', 3000))) {
-				logger('immediate delivery deferred.', LOGGER_DEBUG, LOG_INFO);
-				Queue::update($hash);
-				continue;
-			}
-			*/
-
 			Master::Summon(['Deliver', $hash]);
-
-			/*
-			$total = $total - 1;
-			*/
-
-			if ($interval) {
-				usleep($interval);
-			}
-
 		}
 	}
 

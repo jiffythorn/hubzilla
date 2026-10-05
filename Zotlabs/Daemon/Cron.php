@@ -67,8 +67,6 @@ class Cron {
 		require_once('include/account.php');
 		remove_expired_registrations();
 
-		$interval = Config::Get('queueworker', 'queue_interval', 500000);
-
 		// expire any expired items
 
 		$r = q("select id, uid, item_wall from item where expires > '2001-01-01 00:00:00' and expires < %s
@@ -83,9 +81,6 @@ class Cron {
 				if ($rr['item_wall']) {
 					// The notifier isn't normally invoked unless item_drop is interactive.
 					Master::Summon(['Notifier', 'drop', $rr['id']]);
-					if ($interval) {
-						usleep($interval);
-					}
 				}
 			}
 		}
@@ -115,10 +110,6 @@ class Cron {
 		if ($r) {
 			foreach ($r as $rr) {
 				Master::Summon(array('Directory', $rr['channel_id'], 'force'));
-
-				if ($interval) {
-					usleep($interval);
-				}
 			}
 		}
 
@@ -170,9 +161,6 @@ class Cron {
 					if (!empty($post['approval_id'])) {
 						Master::Summon(['Notifier', 'wall-new', $post['approval_id']]);
 					}
-				}
-				if ($interval) {
-					usleep($interval);
 				}
             }
         }

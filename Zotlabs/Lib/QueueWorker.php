@@ -5,17 +5,17 @@ namespace Zotlabs\Lib;
 use Exception;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\Exception\UnableToBuildUuidException;
-use Zotlabs\Lib\Config;
 
 require_once 'include/dba/dba_transaction.php';
 
-class QueueWorker {
+class QueueWorker
+{
+	public static $queueWorker;
+	public static $maxWorkers;
+	public static $workerMaxAge;
+	public static $workItem;
 
-	public static $queueworker = null;
-	public static $maxworkers = 0;
-	public static $workermaxage = 0;
-	public static $workersleep = 100;
-	public static $default_priorities = [
+	public static $defaultPriorities = [
 		'Notifier'         => 10,
 		'Deliver'          => 10,
 		'Cache_query'      => 10,
@@ -25,357 +25,425 @@ class QueueWorker {
 		'Directory'        => 1
 	];
 
-	// Exceptions for processtimeout ($workermaxage) value.
-	// Currently the value is overriden with 3600 seconds (1h).
-	public static $long_running_cmd = [
+	public static $longRunningCmd = [
 		'Queue',
 		'Expire'
 	];
 
-	public static function Summon($argv) {
+	public function __construct(array $arr)
+	{
+		self::$workItem = $arr;
+		self::$maxWorkers = max(2, Config::Get('queueworker', 'max_queueworkers', 4));
+		self::$workerMaxAge = max(120, Config::Get('queueworker', 'max_queueworker_age', 300));
+	}
 
-		if ($argv[0] !== 'Queueworker') {
-
-			$priority = 0; // @TODO allow reprioritization
-
-			if (isset(self::$default_priorities[$argv[0]])) {
-				$priority = self::$default_priorities[$argv[0]];
-			}
-
-			$workinfo      = ['argc' => count($argv), 'argv' => $argv];
-			$workinfo_json = json_encode($workinfo);
-			$uuid          = self::getUuid($workinfo_json);
-
-			$r = q("SELECT * FROM workerq WHERE workerq_uuid = '%s'",
-				dbesc($uuid)
-			);
-			if ($r) {
-				logger("Summon: Ignoring duplicate workerq task", LOGGER_DEBUG);
-				logger(print_r($workinfo, true));
-				return;
-			}
-
-			logger('queueworker_stats_summon: cmd:' . $argv[0] . ' ' . 'timestamp:' . time());
-
-			$transaction = new \DbaTransaction(\DBA::$dba);
-			$r = q("INSERT INTO workerq (workerq_priority, workerq_data, workerq_uuid, workerq_cmd) VALUES (%d, '%s', '%s', '%s')",
-				intval($priority),
-				dbesc($workinfo_json),
-				dbesc($uuid),
-				dbesc($argv[0])
-			);
-			if (!$r) {
-				// Transaction is autmatically rolled back on return
-				logger("INSERT FAILED", LOGGER_DEBUG);
-				return;
-			}
-			$transaction->commit();
-			logger('INSERTED: ' . $workinfo_json, LOGGER_DEBUG);
+	public function summon(): void
+	{
+		if ($this->isWorkItem()) {
+			$this->insertWork(self::$workItem);
 		}
 
-		$workers = self::GetWorkerCount();
-		if ($workers < self::$maxworkers) {
-			logger($workers . '/' . self::$maxworkers . ' workers active', LOGGER_DEBUG);
-			$phpbin = Config::Get('system', 'phpbin', 'php');
-			proc_run($phpbin, 'Zotlabs/Daemon/Master.php', ['Queueworker']);
+		$this->spawnWorkerIfNeeded();
+	}
+
+	public function release(): void
+	{
+		if ($this->isWorkItem()) {
+			$this->insertWork(self::$workItem);
+			$this->process();
+		}
+		else {
+			// We already have a worker and a work id.
+			$this->process(self::$workItem[1], self::$workItem[2]);
 		}
 	}
 
-	public static function Release($argv) {
-
-		if ($argv[0] !== 'Queueworker') {
-
-			$priority = 0; // @TODO allow reprioritization
-			if (isset(self::$default_priorities[$argv[0]])) {
-				$priority = self::$default_priorities[$argv[0]];
-			}
-
-			$workinfo      = ['argc' => count($argv), 'argv' => $argv];
-			$workinfo_json = json_encode($workinfo);
-			$uuid          = self::getUuid($workinfo_json);
-
-			$r = q("SELECT * FROM workerq WHERE workerq_uuid = '%s'",
-				dbesc($uuid)
-			);
-			if ($r) {
-				logger("Release: Duplicate task - do not insert.", LOGGER_DEBUG);
-				logger(print_r($workinfo, true));
-				return;
-			}
-
-			$transaction = new \DbaTransaction(\DBA::$dba);
-			$r = q("INSERT INTO workerq (workerq_priority, workerq_data, workerq_uuid, workerq_cmd) VALUES (%d, '%s', '%s', '%s')",
-				intval($priority),
-				dbesc($workinfo_json),
-				dbesc($uuid),
-				dbesc($argv[0])
-			);
-			if (!$r) {
-				// Transaction is automatically rolled back on return
-				logger("Insert failed: " . $workinfo_json, LOGGER_DEBUG);
-				return;
-			}
-			$transaction->commit();
-			logger('INSERTED: ' . $workinfo_json, LOGGER_DEBUG);
-		}
-
-		self::Process();
-	}
-
-	public static function GetWorkerCount() {
-		if (self::$maxworkers == 0) {
-			self::$maxworkers = Config::Get('queueworker', 'max_queueworkers', 4);
-			self::$maxworkers = self::$maxworkers > 3 ? self::$maxworkers : 4;
-		}
-		if (self::$workermaxage == 0) {
-			self::$workermaxage = Config::Get('queueworker', 'max_queueworker_age');
-			self::$workermaxage = self::$workermaxage > 120 ? self::$workermaxage : 300;
-		}
+	/**
+	 * Insert a new work item.
+	 *
+	 */
+	private function insertWork(array $argv): void
+	{
+		$priority = self::$defaultPriorities[$argv[0]] ?? 0;
+		$workinfo = ['argc' => count($argv), 'argv' => $argv];
+		$workinfo_json = json_encode($workinfo);
+		$uuid = $this->getUuid($workinfo_json);
 
 		$transaction = new \DbaTransaction(\DBA::$dba);
 
-		// skip locked is preferred but is not supported by mariadb < 10.6 which is still used a lot - hence make it optional
-		$sql_quirks = ((Config::Get('system', 'db_skip_locked_supported')) ? 'SKIP LOCKED' : 'NOWAIT');
-
-		$r = q("SELECT workerq_id FROM workerq WHERE workerq_reservationid IS NOT NULL AND workerq_processtimeout < %s FOR UPDATE $sql_quirks",
-			db_utcnow()
+		$r = q("SELECT * FROM workerq WHERE workerq_uuid = '%s'",
+			dbesc($uuid)
 		);
 
 		if ($r) {
-			// TODO: some long running services store their pid in config.procid.daemon
-			// we could possibly check if a pid exist and check if the process is still alive
-			// prior to reseting workerq_reservationid
-
-			$ids = ids_to_querystr($r, 'workerq_id');
-			$u = dbq("update workerq set workerq_reservationid = null where workerq_id in ($ids)");
+			logger('Duplicate task - do not insert.', LOGGER_DEBUG);
+			logger(print_r($workinfo, true));
+			return;
 		}
 
+		$r = q("INSERT INTO workerq
+			(workerq_priority, workerq_data, workerq_uuid, workerq_cmd)
+			VALUES (%d, '%s', '%s', '%s')",
+			intval($priority),
+			dbesc($workinfo_json),
+			dbesc($uuid),
+			dbesc($argv[0])
+		);
+
+		if (!$r) {
+			logger('Insert failed: ' . $workinfo, LOGGER_DEBUG);
+			return;
+		}
 		$transaction->commit();
-
-		//q("update workerq set workerq_reservationid = null where workerq_reservationid is not null and workerq_processtimeout < %s",
-			//db_utcnow()
-		//);
-
-		//usleep(self::$workersleep);
-
-		$workers = dbq("select count(*) as total from workerq where workerq_reservationid is not null");
-		logger("WORKERCOUNT: " . $workers[0]['total'], LOGGER_DEBUG);
-
-		return intval($workers[0]['total']);
 	}
 
-	public static function GetWorkerID() {
-		if (self::$queueworker) {
-			return self::$queueworker;
+	/**
+	 * Fetch an existing work item.
+	 *
+	 */
+	private function getWork(): array|false
+	{
+		$work = dbq("SELECT workerq_id, workerq_cmd FROM workerq
+			WHERE workerq_reservationid IS NULL
+			ORDER BY workerq_priority DESC, workerq_id ASC
+			LIMIT 1 FOR UPDATE SKIP LOCKED"
+		);
+
+		if ($work) {
+			return $work[0];
 		}
 
-		//usleep(mt_rand(300000, 1000000)); //Sleep .3 - 1 seconds before creating a new worker.
-
-		$workers = self::GetWorkerCount();
-
-		if ($workers >= self::$maxworkers) {
-			logger("Too many active workers ($workers) max = " . self::$maxworkers, LOGGER_DEBUG);
-			return false;
-		}
-
-		self::$queueworker = uniqid('', true);
-		return self::$queueworker;
+		return false;
 	}
 
-	private static function getWorkId() {
-		self::GetWorkerCount();
-
-		$transaction = new \DbaTransaction(\DBA::$dba);
-
-		// skip locked is preferred but is not supported by mariadb < 10.6 which is still used a lot - hence make it optional
-		$sql_quirks = ((Config::Get('system', 'db_skip_locked_supported')) ? 'SKIP LOCKED' : 'NOWAIT');
-
-		$work = dbq("SELECT workerq_id, workerq_cmd FROM workerq WHERE workerq_reservationid IS NULL ORDER BY workerq_priority DESC, workerq_id ASC LIMIT 1 FOR UPDATE $sql_quirks");
+	/**
+	 * Reserve one unreserved queue item for $workerid.
+	 *
+	 * The caller must already have an open transaction.
+	 * The returned reservation is the worker's slot.
+	 */
+	private function reserveWork($workerid): int|false
+	{
+		$work = $this->getWork();
 
 		if (!$work) {
-			// Transaction automatically rolled back on return
 			return false;
 		}
 
-		$id = $work[0]['workerq_id'];
-		$cmd = $work[0]['workerq_cmd'];
-		$age = self::$workermaxage;
+		$id  = intval($work['workerq_id']);
+		$cmd = $work['workerq_cmd'];
 
-		if (in_array($cmd, self::$long_running_cmd)) {
-			$age = 3600; // 1h TODO: make this configurable
+		$age = self::$workerMaxAge;
+
+		if (in_array($cmd, self::$longRunningCmd)) {
+			$age = 3600;
 		}
 
-		$work = q("UPDATE workerq SET workerq_reservationid = '%s', workerq_processtimeout = %s + INTERVAL %s WHERE workerq_id = %d",
-			self::$queueworker,
+		$r = q("UPDATE workerq SET workerq_reservationid = '%s', workerq_processtimeout = %s + INTERVAL %s
+			WHERE workerq_id = %d
+			AND workerq_reservationid IS NULL",
+			dbesc($workerid),
 			db_utcnow(),
 			db_quoteinterval($age . " SECOND"),
 			intval($id)
 		);
 
-		if (!$work) {
-			// Transaction automatically rolled back on return
-			logger("Could not update workerq.", LOGGER_DEBUG);
+		if (!$r) {
+			logger('Could not reserve workerq item.', LOGGER_DEBUG);
 			return false;
 		}
-
-		logger("GOTWORK: " . json_encode($work), LOGGER_DEBUG);
-		$transaction->commit();
 
 		return $id;
 	}
 
-	public static function Process() {
-		$sleep = intval(Config::Get('queueworker', 'queue_worker_sleep', 100));
-		$auto_queue_worker_sleep = Config::Get('queueworker', 'auto_queue_worker_sleep', 0);
+	/**
+	 * Initiate the first worker reservation.
+	 *
+	 * This is used when process() is entered directly, e.g. through
+	 * release() instead of spawnWorkerIfNeeded().
+	 */
+	private function getInitialWorkId(): int|false
+	{
+		$transaction = new \DbaTransaction(\DBA::$dba);
 
-		if (!self::GetWorkerID()) {
-			if ($auto_queue_worker_sleep) {
-				Config::Set('queueworker', 'queue_worker_sleep', $sleep + 100);
+		if (!$this->getMutex()) {
+			logger('Unable to acquire queueworker mutex.', LOGGER_DEBUG);
+			return false;
+		}
+
+		$this->recoverExpiredWorkers();
+		$workers = $this->countWorkers();
+
+		if ($workers >= self::$maxWorkers) {
+			$transaction->commit();
+			logger("Too many active workers ($workers) max = " . self::$maxWorkers,	LOGGER_DEBUG);
+			return false;
+		}
+
+		$workerid = uniqid('', true);
+		$workid = $this->reserveWork($workerid);
+
+		if (!$workid) {
+			$transaction->commit();
+			return false;
+		}
+
+		self::$queueWorker = $workerid;
+		$transaction->commit();
+
+		return $workid;
+	}
+
+	/**
+	 * Reserve the next job and release the current one.
+	 *
+	 * There is never a committed state in which this worker has
+	 * no reservation as long as there is work.
+	 */
+	private function getNextWorkId($current_workid): int|false
+	{
+		$transaction = new \DbaTransaction(\DBA::$dba);
+		$work = $this->getWork();
+
+		if ($work) {
+			$id  = intval($work['workerq_id']);
+			$cmd = $work['workerq_cmd'];
+
+			$age = self::$workerMaxAge;
+
+			if (in_array($cmd, self::$longRunningCmd)) {
+				$age = 3600;
 			}
 
-			logger('Unable to get worker ID. Exiting.', LOGGER_DEBUG);
-			killme();
+			// Reserve the next item first.
+			$r = q("UPDATE workerq SET workerq_reservationid = '%s', workerq_processtimeout = %s + INTERVAL %s
+				WHERE workerq_id = %d
+				AND workerq_reservationid IS NULL",
+				dbesc(self::$queueWorker),
+				db_utcnow(),
+				db_quoteinterval($age . " SECOND"),
+				$id
+			);
+
+			if (!$r) {
+				logger('Could not reserve next workerq item.', LOGGER_DEBUG);
+				return false;
+			}
+
+			// Then release the old item.
+			$r = q("DELETE FROM workerq
+				WHERE workerq_id = %d
+				AND workerq_reservationid = '%s'",
+				intval($current_workid),
+				dbesc(self::$queueWorker)
+			);
+
+			if (!$r) {
+				logger('Could not release previous workerq item.', LOGGER_DEBUG);
+				return false;
+			}
+
+			$transaction->commit();
+			return $id;
 		}
 
-		if ($auto_queue_worker_sleep && $sleep > 100) {
-			$next_sleep = $sleep - 100;
-			Config::Set('queueworker', 'queue_worker_sleep', (($next_sleep < 100) ? 100 : $next_sleep));
+		// There is no next job.
+		// Removing the current reservation and committing it marks EOL of the worker.
+		$r = q("DELETE FROM workerq
+			WHERE workerq_id = %d
+			AND workerq_reservationid = '%s'",
+			intval($current_workid),
+			dbesc(self::$queueWorker)
+		);
+
+		if (!$r) {
+			logger('Could not release final workerq item.', LOGGER_DEBUG);
+			return false;
 		}
 
-		$jobs               = 0;
-		$workid             = self::getWorkId();
-		$load_average_sleep = false;
-		self::$workersleep  = $sleep;
-		self::$workersleep  = ((intval(self::$workersleep) > 100) ? intval(self::$workersleep) : 100);
+		$transaction->commit();
+		return false;
+	}
 
-		if (function_exists('sys_getloadavg') && Config::Get('queueworker', 'load_average_sleep')) {
-			// very experimental!
-			$load_average_sleep = true;
+
+
+	/**
+	 * Spawn a worker if a worker slot is available.
+	 *
+	 * The worker's first queue reservation is created while the
+	 * worker-count mutex is held. Therefore the slot exists in the
+	 * database before proc_run() is called.
+	 */
+	private function spawnWorkerIfNeeded(): void
+	{
+		$transaction = new \DbaTransaction(\DBA::$dba);
+
+		if (!$this->getMutex()) {
+			logger('Unable to acquire queueworker mutex.', LOGGER_DEBUG	);
+			return;
 		}
 
+		$this->recoverExpiredWorkers();
+		$workers = $this->countWorkers();
+
+		if ($workers >= self::$maxWorkers) {
+			$transaction->commit();
+			logger("Too many active workers ($workers) max = " . self::$maxWorkers,	LOGGER_DEBUG);
+			return;
+		}
+
+		$workerid = uniqid('', true);
+		$workid = $this->reserveWork($workerid);
+
+		if (!$workid) {
+			$transaction->commit();
+			return;
+		}
+
+		$transaction->commit();
+
+		logger($workers . '/' . self::$maxWorkers .	' workers active; spawning worker ' . $workerid . ' for work ' . $workid, LOGGER_DEBUG);
+
+		$phpbin = Config::Get('system',	'phpbin', 'php');
+		proc_run($phpbin, 'Zotlabs/Daemon/Master.php', ['Queueworker', $workerid, $workid]);
+	}
+
+	public function process($workerid = null, $workid = null): void
+	{
+		// A worker spawned by spawnWorkerIfNeeded() already owns
+		// a reservation and passes both values here.
+		if ($workerid !== null && $workid !== null) {
+			self::$queueWorker = $workerid;
+		}
+		else {
+			// Direct process() entry, such as release(), must acquire its worker slot atomically
+			$workid = $this->getInitialWorkId();
+			if (!$workid) {
+				killme();
+			}
+		}
+
+		$jobs = 0;
 		$select_stmt = p("SELECT * FROM workerq WHERE workerq_id = ?");
-		$delete_stmt = p("DELETE FROM workerq WHERE workerq_id = ?");
 
 		while ($workid) {
-
-			if ($load_average_sleep) {
-				$load_average      = sys_getloadavg();
-				self::$workersleep = intval($load_average[0]) * 10000;
-
-				if (!self::$workersleep) {
-					self::$workersleep = 100;
-				}
-			}
-
-			logger('queue_worker_sleep: ' . self::$workersleep, LOGGER_DEBUG);
-
-			usleep(self::$workersleep);
-
-			$workitem = e($select_stmt, [$workid]);
+			$workitem = e($select_stmt,	[$workid]);
 
 			if ($workitem) {
-				// At least SOME work to do.... in case there's more, let's ramp up workers.
-				$workers = self::GetWorkerCount();
-
-				if ($workers < self::$maxworkers) {
-					logger($workers . '/' . self::$maxworkers . ' workers active', LOGGER_DEBUG);
-					$phpbin = Config::Get('system', 'phpbin', 'php');
-					proc_run($phpbin, 'Zotlabs/Daemon/Master.php', ['Queueworker']);
-				}
+				// There is already a reservation belonging to this worker,
+				// so another worker can safely be spawned if there is capacity.
+				$this->spawnWorkerIfNeeded();
 
 				$jobs++;
 
-				logger("Workinfo: " . $workitem[0]['workerq_data'], LOGGER_DEBUG);
+				logger('Workinfo: ' . $workitem[0]['workerq_data'], LOGGER_DEBUG);
 
 				$workinfo = json_decode($workitem[0]['workerq_data'], true);
-				$argv     = $workinfo['argv'];
+				$argv = $workinfo['argv'];
 
-				$cls  = '\\Zotlabs\\Daemon\\' . $argv[0];
+				$cls = '\\Zotlabs\\Daemon\\' . $argv[0];
+
 				$argv = flatten_array_recursive($argv);
 				$argc = count($argv);
 				$rnd = random_string(16);
 
-				logger('PROCESSING: ' . $rnd . ' ' . print_r($argv[0], true));
-
+				logger('PROCESSING: ' .	$rnd . ' ' . print_r($argv[0], true));
 				$start_timestamp = microtime(true);
-
 				try {
 					$cls::run($argc, $argv);
-
-					logger('logger_stats_data cmd:' . $argv[0] . ' start:' . $start_timestamp . ' ' . 'end:' . microtime(true) . ' meta:' . $rnd);
-
+					logger('logger_stats_data cmd:' . $argv[0] . ' start:' . $start_timestamp .	' end:' . microtime(true) . ' meta:' . $rnd);
 					logger('COMPLETED: ' . $rnd);
 
-					// @FIXME: Right now we assume that if we get a return, everything is OK.
-					// At some point we may want to test whether the run returns true/false
-					// and requeue the work to be tried again if needed.  But we probably want
-					// to implement some sort of "retry interval" first.
-
-					e($delete_stmt, [$workid]);
-				} catch (Exception $ex) {
+					// Atomically transition: current reservation -> next reservation
+					// If there is no next job, this releases the worker slot and returns false.
+					$workid = $this->getNextWorkId($workid);
+				}
+				catch (Exception $ex) {
 					$class = get_class($ex);
-					logger("EXCEPTION: {$rnd} {$class}: {$ex->getMessage()}");
+					logger("EXCEPTION: {$rnd} {$class}: " .	$ex->getMessage());
+
+					// TODO: what do we do with failed jobs?
+					$workid = false;
 				}
 			}
 			else {
-				logger("NO WORKITEM!", LOGGER_DEBUG);
+				logger('NO WORKITEM!', LOGGER_DEBUG);
+				$workid = false;
 			}
-			$workid = self::getWorkId();
 		}
-		logger('Master: Worker Thread: queue items processed:' . $jobs, LOGGER_DEBUG);
+
+		logger('Worker: ' . self::$queueWorker . ' processed ' . $jobs . ' jobs', LOGGER_DEBUG);
 	}
 
-	public static function ClearQueue() {
-		$work = q("select * from workerq");
-		while ($work) {
-			foreach ($work as $workitem) {
-				$workinfo = json_decode($workitem['v'], true);
-				$argc     = $workinfo['argc'];
-				$argv     = $workinfo['argv'];
+	/**
+	 * Generate a name-based v5 UUID with custom namespace.
+	 */
+	private function getUuid(string $data): string
+	{
+		$namespace = '3a112e42-f147-4ccf-a78b-f6841339ea2a';
+		try {
+			$uuid = Uuid::uuid5($namespace, $data)->toString();
+		}
+		catch (UnableToBuildUuidException $e) {
+			logger('UUID generation failed');
+			return '';
+		}
 
-				logger('Master: process: ' . print_r($argv, true), LOGGER_ALL, LOG_DEBUG);
+		return $uuid;
+	}
 
-				if (!isset($argv[0])) {
-					q("delete from workerq where workerq_id = %d",
-						$work[0]['workerq_id']
-					);
-					continue;
-				}
+	/**
+	 * Recover workers whose reservation has expired.
+	 *
+	 * This must be called while the caller holds the queueworker
+	 * mutex transaction.
+	 */
+	private function recoverExpiredWorkers(): void
+	{
+		$r = q("SELECT workerq_id FROM workerq WHERE workerq_reservationid IS NOT NULL
+			AND workerq_processtimeout < %s
+			FOR UPDATE SKIP LOCKED",
+			db_utcnow()
+		);
 
-				$cls = '\\Zotlabs\\Daemon\\' . $argv[0];
-				$cls::run($argc, $argv);
-
-				q("delete from workerq where workerq_id = %d",
-					$work[0]['workerq_id']
-				);
-
-				//Give the server .3 seconds to catch its breath between tasks.
-				//This will hopefully keep it from crashing to it's knees entirely
-				//if the last task ended up initiating other parallel processes
-				//(eg. polling remotes)
-				usleep(300000);
-			}
-
-			//Make sure nothing new came in
-			$work = q("select * from workerq");
+		if ($r) {
+			$ids = ids_to_querystr($r, 'workerq_id');
+			dbq("UPDATE workerq SET workerq_reservationid = NULL WHERE workerq_id IN ($ids)");
 		}
 	}
 
 	/**
-	 * @brief Generate a name-based v5 UUID with custom namespace
+	 * Count active workers (reservations).
 	 *
-	 * @param string $data
-	 * @return string $uuid
+	 * This must be called while the caller holds the queueworker
+	 * mutex transaction.
+	 *
 	 */
-	private static function getUuid(string $data) {
-		$namespace = '3a112e42-f147-4ccf-a78b-f6841339ea2a';
-		try {
-			$uuid = Uuid::uuid5($namespace, $data)->toString();
-		} catch (UnableToBuildUuidException $e) {
-			logger('UUID generation failed');
-			return '';
-		}
-		return $uuid;
+	private function countWorkers(): int
+	{
+		$workers = dbq("SELECT count(*) AS total FROM workerq
+			 WHERE workerq_reservationid IS NOT NULL"
+		);
+
+		return intval($workers[0]['total'] ?? 0);
 	}
 
+	/**
+	 * Get the mutex with a read lock query.
+	 *
+	 */
+	private function getMutex(): bool
+	{
+		$r = dbq("SELECT mutex_name FROM mutex
+			 WHERE mutex_name = 'queueworker'
+			 FOR UPDATE"
+		);
+
+		return !empty($r);
+	}
+
+	private function isWorkItem(): bool
+	{
+		return self::$workItem[0] !== 'Queueworker';
+	}
 }

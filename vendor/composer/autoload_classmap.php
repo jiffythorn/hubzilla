@@ -2481,6 +2481,8 @@ return array(
     'Zotlabs\\Update\\_1264' => $baseDir . '/Zotlabs/Update/_1264.php',
     'Zotlabs\\Update\\_1265' => $baseDir . '/Zotlabs/Update/_1265.php',
     'Zotlabs\\Update\\_1266' => $baseDir . '/Zotlabs/Update/_1266.php',
+    'Zotlabs\\Update\\_1267' => $baseDir . '/Zotlabs/Update/_1267.php',
+    'Zotlabs\\Update\\_1268' => $baseDir . '/Zotlabs/Update/_1268.php',
     'Zotlabs\\Web\\Controller' => $baseDir . '/Zotlabs/Web/Controller.php',
     'Zotlabs\\Web\\HTTPHeaders' => $baseDir . '/Zotlabs/Web/HTTPHeaders.php',
     'Zotlabs\\Web\\HTTPSig' => $baseDir . '/Zotlabs/Web/HTTPSig.php',

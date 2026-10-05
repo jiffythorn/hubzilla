@@ -20,8 +20,6 @@ class Poller {
 			}
 		}
 
-		$interval = Config::Get('queueworker', 'queue_interval', 500000);
-
 		logger('poller: start');
 
 		$manual_id  = 0;
@@ -97,14 +95,9 @@ class Poller {
 
 					if ($t < $x) {
 						Master::Summon(['Onepoll', $contact['abook_id']]);
-
-						if ($interval) {
-							usleep($interval);
-						}
 					}
 
 					continue;
-
 				}
 
 				if ($contact['xchan_network'] !== 'zot6')
@@ -163,10 +156,6 @@ class Poller {
 					continue;
 
 				Master::Summon(['Onepoll', $contact['abook_id']]);
-
-				if ($interval) {
-					usleep($interval);
-				}
 			}
 		}
 
@@ -190,10 +179,6 @@ class Poller {
 							continue;
 
 					Master::Summon(['Onedirsync', $rr['ud_id']]);
-
-					if ($interval) {
-						usleep($interval);
-					}
 				}
 			}
 		}

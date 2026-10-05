@@ -188,6 +188,11 @@ class CreateIdentityTest extends UnitTestCase {
 
 	public function proc_run_hook(array &$args): void {
 		$args['run_cmd'] = false;
+
+		// We can not actually predict those
+		unset($args['args'][3]); // worker id
+		unset($args['args'][4]); // work id
+
 		$this->queueworker_started =
 			$args['args'] === ['php', 'Zotlabs/Daemon/Master.php', 'Queueworker'];
 	}
