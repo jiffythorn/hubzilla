@@ -1637,3 +1637,11 @@ CREATE TABLE IF NOT EXISTS workerq (
 	KEY workerq_processtimeout (workerq_processtimeout),
 	KEY workerq_uuid (workerq_uuid)
 ) ENGINE = InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS mutex (
+    mutex_name varchar(64) NOT NULL,
+    created datetime NOT NULL DEFAULT (UTC_TIMESTAMP()),
+    PRIMARY KEY (mutex_name)
+) ENGINE = InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT INTO mutex (mutex_name) VALUES ('queueworker');

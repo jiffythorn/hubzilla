@@ -11,11 +11,6 @@ $db_pass = '{{$dbpass}}';
 $db_data = '{{$dbdata}}';
 $db_type = '{{$dbtype}}'; // an integer. 0 or unset for mysql, 1 for postgres
 
-// Set this to 1 if your DB backend supports skip locked.
-// This is known to be the case for
-// postgresql > 9.5, mysql > 8.0 and mariadb > 10.6
-App::$config['system']['db_skip_locked_supported'] = 0;
-
 
 /*
  * Note: Plusieurs de ces réglages seront disponibles via le panneau d'administration
@@ -28,6 +23,7 @@ App::$config['system']['db_skip_locked_supported'] = 0;
  * sur les entrées dans la BD.
  *
  */
+
 
 // Choisissez votre emplacement géographique. Si vous n'êtes pas certain, utilisez "America/Los_Angeles".
 // Vous pourrez le changer plus tard et ce réglage n'affecte que les visiteurs anonymes.

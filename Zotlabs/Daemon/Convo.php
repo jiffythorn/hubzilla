@@ -34,7 +34,7 @@ class Convo {
 		}
 
 		$force = $argv[4] ?? false;
-		$interval = Config::Get('queueworker', 'queue_interval', 500000);
+		$interval = Config::Get('system', 'queue_interval', 500000);
 
 		foreach ($channels as $channel_id) {
 			$channel = channelx_by_n($channel_id);

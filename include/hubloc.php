@@ -157,8 +157,6 @@ function remove_obsolete_hublocs() {
 
 	logger('remove_obsolete_hublocs: removing ' . count($r) . ' hublocs.');
 
-	$interval = Config::Get('queueworker', 'queue_interval', 500000);
-
 	foreach($r as $rr) {
 		q("update hubloc set hubloc_deleted = 1 where hubloc_id = %d",
 			intval($rr['hubloc_id'])
@@ -168,10 +166,6 @@ function remove_obsolete_hublocs() {
 
 		if($channel_id) {
 			Master::Summon(['Notifier', 'refresh_all', $channel_id]);
-
-			if($interval) {
-				usleep($interval);
-			}
 		}
 	}
 }
@@ -215,7 +209,6 @@ function remove_duplicate_singleton_hublocs() {
 	}
 
 }
-
 
 /**
  * @brief Change primary hubloc.

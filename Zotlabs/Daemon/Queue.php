@@ -57,7 +57,7 @@ class Queue {
 				}
 
 				shuffle($deliveries);
-				do_delivery($deliveries, true);
+				do_delivery($deliveries);
 			}
 		 }
 	}

@@ -1527,27 +1527,11 @@ function scrape_feed($url) {
 
 
 
-function do_delivery($deliveries, $force = false) {
+function do_delivery($deliveries) {
 
-	// $force is set if a site that wasn't responding suddenly returns to life.
-	// Try and shove through everything going to that site while it's responding.
-
-	if(! (is_array($deliveries) && count($deliveries)))
-		return;
-
-	/*
-	$x = q("select count(outq_hash) as total from outq where outq_delivered = 0");
-	if(intval($x[0]['total']) > intval(Config::Get('system','force_queue_threshold',3000)) && (! $force)) {
-		logger('immediate delivery deferred.', LOGGER_DEBUG, LOG_INFO);
-		foreach($deliveries as $d) {
-			Queue::update($d);
-		}
+	if(empty($deliveries) || !is_array($deliveries)) {
 		return;
 	}
-	*/
-
-
-	$interval = Config::Get('queueworker', 'queue_interval', 500000);
 
 	$deliveries_per_process = intval(Config::Get('system', 'delivery_batch_count'));
 
@@ -1557,19 +1541,15 @@ function do_delivery($deliveries, $force = false) {
 
 	$deliver = [];
 	foreach($deliveries as $d) {
-
-		if(! $d)
+		if (!$d) {
 			continue;
+		}
 
 		$deliver[] = $d;
 
 		if(count($deliver) >= $deliveries_per_process) {
 			Zotlabs\Daemon\Master::Summon(['Deliver', $deliver]);
 			$deliver = [];
-
-			if($interval) {
-				usleep($interval);
-			}
 		}
 	}
 
