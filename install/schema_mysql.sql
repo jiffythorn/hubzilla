@@ -219,7 +219,8 @@ CREATE TABLE IF NOT EXISTS `cache` (
   `k` char(191) NOT NULL DEFAULT '',
   `v` mediumtext NOT NULL,
   `updated` datetime NOT NULL DEFAULT '0001-01-01 00:00:00',
-  PRIMARY KEY (`k`)
+  PRIMARY KEY (`k`),
+  KEY `updated` (`updated`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `cal` (

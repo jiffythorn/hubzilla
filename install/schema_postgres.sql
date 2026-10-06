@@ -217,6 +217,8 @@ CREATE TABLE "cache" (
   "updated" timestamp NOT NULL,
   PRIMARY KEY ("k")
 );
+create index "cache_updated_idx" on cache ("updated");
+
 CREATE TABLE "cal" (
   "cal_id" serial  NOT NULL,
   "cal_aid" bigint NOT NULL DEFAULT '0',
