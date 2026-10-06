@@ -22,6 +22,30 @@ class SetupTest extends TestCase {
 
 	public function test_that_setup_is_available_if_no_accounts_in_db(): void {
 		$this->with_no_accounts_in_db();
+
+		//
+		// Mock the openssl_pkey_new function.
+		//
+		// The setup routine does not use the result from the function, but it
+		// is slow since it's creating a new public/private key pair. This
+		// simply makes the test pass a bit faster.
+		//
+		$this->getFunctionMock('Zotlabs\Module', 'openssl_pkey_new')
+		   ->expects($this->once())
+		   ->willReturn(42);
+
+		//
+		// Mock the z_fetch_url function.
+		//
+		// The setup ruotine will check that it can access the site using a
+		// HTTP request using this function. Since we're not running a web
+		// server as part of the tests, this will hang for a long time before
+		// it times out.
+		//
+		$this->getFunctionMock('Zotlabs\Module', 'z_fetch_url')
+		   ->expects($this->any())
+		   ->willReturn(['success' => true, 'body' => 'ok']);
+
 		$this->get('setup');
 
 		$this->assertEquals('setup', \App::$page['page_title']);
