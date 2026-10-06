@@ -18,7 +18,7 @@ class _1268 {
 		else {
 			dbq("CREATE TABLE mutex (
 				mutex_name VARCHAR(64) NOT NULL,
-				created DATETIME NOT NULL DEFAULT UTC_TIMESTAMP(),
+				created DATETIME NOT NULL DEFAULT (UTC_TIMESTAMP()),
 				PRIMARY KEY (mutex_name)
 				) ENGINE = InnoDB DEFAULT CHARSET=utf8mb4"
 			);
