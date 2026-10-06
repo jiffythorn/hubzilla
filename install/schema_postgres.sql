@@ -1670,12 +1670,12 @@ CREATE TABLE IF NOT EXISTS workerq (
 	workerq_data text,
 	workerq_uuid UUID NOT NULL,
 	workerq_cmd text NOT NULL DEFAULT '',
-	PRIMARY KEY (workerq_id)
+	PRIMARY KEY (workerq_id),
+	UNIQUE (workerq_uuid)
 );
 CREATE INDEX idx_workerq_priority ON workerq (workerq_priority);
 CREATE INDEX idx_workerq_reservationid ON workerq (workerq_reservationid);
 CREATE INDEX idx_workerq_processtimeout ON workerq (workerq_processtimeout);
-CREATE INDEX idx_workerq_uuid ON workerq (workerq_uuid);
 
 CREATE TABLE mutex (
     mutex_name varchar(64) NOT NULL,
