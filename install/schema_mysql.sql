@@ -1630,6 +1630,7 @@ CREATE TABLE IF NOT EXISTS workerq (
 	workerq_priority smallint,
 	workerq_reservationid varchar(25) DEFAULT NULL,
 	workerq_processtimeout datetime NOT NULL DEFAULT '0001-01-01 00:00:00',
+	workerq_pid INT UNSIGNED DEFAULT NULL,
 	workerq_data text,
 	workerq_uuid char(36) NOT NULL DEFAULT '',
 	workerq_cmd varchar(191) NOT NULL DEFAULT '',

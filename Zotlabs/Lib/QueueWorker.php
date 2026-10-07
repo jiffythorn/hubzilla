@@ -3,6 +3,7 @@
 namespace Zotlabs\Lib;
 
 use Exception;
+use DBA;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\Exception\UnableToBuildUuidException;
 
@@ -11,23 +12,20 @@ require_once 'include/dba/dba_transaction.php';
 class QueueWorker
 {
 	public static $queueWorker;
+	public static $queueWorkerPid;
 	public static $maxWorkers;
 	public static $workerMaxAge;
 	public static $workItem;
 
 	public static $defaultPriorities = [
+		// Priority 0 is reserved for failing workers - see recoverExpiredWorkers()
 		'Notifier'         => 10,
 		'Deliver'          => 10,
 		'Cache_query'      => 10,
-		'Content_importer' => 1,
-		'File_importer'    => 1,
-		'Channel_purge'    => 1,
-		'Directory'        => 1
-	];
-
-	public static $longRunningCmd = [
-		'Queue',
-		'Expire'
+		'Content_importer' => 2,
+		'File_importer'    => 2,
+		'Channel_purge'    => 2,
+		'Directory'        => 2
 	];
 
 	public function __construct(array $arr)
@@ -64,7 +62,7 @@ class QueueWorker
 	 */
 	private function insertWork(array $argv): void
 	{
-		$priority = self::$defaultPriorities[$argv[0]] ?? 0;
+		$priority = self::$defaultPriorities[$argv[0]] ?? 1;
 		$workinfo = ['argc' => count($argv), 'argv' => $argv];
 		$workinfo_json = json_encode($workinfo);
 		$uuid = $this->getUuid($workinfo_json);
@@ -91,7 +89,7 @@ class QueueWorker
 		);
 
 		if (!$r) {
-			logger('Insert failed: ' . $workinfo, LOGGER_DEBUG);
+			logger('Insert failed: ' . print_r($workinfo, true), LOGGER_DEBUG);
 			return;
 		}
 		$transaction->commit();
@@ -122,7 +120,7 @@ class QueueWorker
 	 * The caller must already have an open transaction.
 	 * The returned reservation is the worker's slot.
 	 */
-	private function reserveWork($workerid): int|false
+	private function reserveWork(string $workerid, ?int $pid = null): int|false
 	{
 		$work = $this->getWork();
 
@@ -130,22 +128,16 @@ class QueueWorker
 			return false;
 		}
 
-		$id  = intval($work['workerq_id']);
-		$cmd = $work['workerq_cmd'];
+		$id = intval($work['workerq_id']);
 
-		$age = self::$workerMaxAge;
-
-		if (in_array($cmd, self::$longRunningCmd)) {
-			$age = 3600;
-		}
-
-		$r = q("UPDATE workerq SET workerq_reservationid = '%s', workerq_processtimeout = %s + INTERVAL %s
+		$r = q("UPDATE workerq SET workerq_reservationid = '%s', workerq_pid = %s, workerq_processtimeout = %s + INTERVAL %s
 			WHERE workerq_id = %d
 			AND workerq_reservationid IS NULL",
 			dbesc($workerid),
+			$pid !== null ? intval($pid) : 'NULL',
 			db_utcnow(),
-			db_quoteinterval($age . " SECOND"),
-			intval($id)
+			db_quoteinterval(self::$workerMaxAge . " SECOND"),
+			$id
 		);
 
 		if (!$r) {
@@ -181,7 +173,7 @@ class QueueWorker
 		}
 
 		$workerid = uniqid('', true);
-		$workid = $this->reserveWork($workerid);
+		$workid = $this->reserveWork($workerid, self::$queueWorkerPid);
 
 		if (!$workid) {
 			$transaction->commit();
@@ -189,6 +181,7 @@ class QueueWorker
 		}
 
 		self::$queueWorker = $workerid;
+
 		$transaction->commit();
 
 		return $workid;
@@ -200,28 +193,22 @@ class QueueWorker
 	 * There is never a committed state in which this worker has
 	 * no reservation as long as there is work.
 	 */
-	private function getNextWorkId($current_workid): int|false
+	private function getNextWorkId(int $current_workid): int|false
 	{
 		$transaction = new \DbaTransaction(\DBA::$dba);
 		$work = $this->getWork();
 
 		if ($work) {
 			$id  = intval($work['workerq_id']);
-			$cmd = $work['workerq_cmd'];
-
-			$age = self::$workerMaxAge;
-
-			if (in_array($cmd, self::$longRunningCmd)) {
-				$age = 3600;
-			}
 
 			// Reserve the next item first.
-			$r = q("UPDATE workerq SET workerq_reservationid = '%s', workerq_processtimeout = %s + INTERVAL %s
+			$r = q("UPDATE workerq SET workerq_reservationid = '%s', workerq_processtimeout = %s + INTERVAL %s, workerq_pid = %d
 				WHERE workerq_id = %d
 				AND workerq_reservationid IS NULL",
 				dbesc(self::$queueWorker),
 				db_utcnow(),
-				db_quoteinterval($age . " SECOND"),
+				db_quoteinterval(self::$workerMaxAge . " SECOND"),
+				intval(self::$queueWorkerPid),
 				$id
 			);
 
@@ -265,8 +252,6 @@ class QueueWorker
 		return false;
 	}
 
-
-
 	/**
 	 * Spawn a worker if a worker slot is available.
 	 *
@@ -279,7 +264,7 @@ class QueueWorker
 		$transaction = new \DbaTransaction(\DBA::$dba);
 
 		if (!$this->getMutex()) {
-			logger('Unable to acquire queueworker mutex.', LOGGER_DEBUG	);
+			logger('Unable to acquire queueworker mutex.', LOGGER_DEBUG);
 			return;
 		}
 
@@ -310,10 +295,15 @@ class QueueWorker
 
 	public function process($workerid = null, $workid = null): void
 	{
+		self::$queueWorkerPid = getmypid();
+
 		// A worker spawned by spawnWorkerIfNeeded() already owns
 		// a reservation and passes both values here.
 		if ($workerid !== null && $workid !== null) {
 			self::$queueWorker = $workerid;
+			if (!$this->registerWorkerPid($workid)) {
+				killme();
+			}
 		}
 		else {
 			// Direct process() entry, such as release(), must acquire its worker slot atomically
@@ -352,17 +342,18 @@ class QueueWorker
 				try {
 					$cls::run($argc, $argv);
 					logger('logger_stats_data cmd:' . $argv[0] . ' start:' . $start_timestamp .	' end:' . microtime(true) . ' meta:' . $rnd);
-					logger('COMPLETED: ' . $rnd);
+					logger('COMPLETED: ' . $argv[0] . ' with worker/pid: ' . self::$queueWorker . '/' . self::$queueWorkerPid);
 
 					// Atomically transition: current reservation -> next reservation
 					// If there is no next job, this releases the worker slot and returns false.
 					$workid = $this->getNextWorkId($workid);
 				}
 				catch (Exception $ex) {
+					// A failing worker will usually loose their PID
+					// and the failing items will get their priority set to 0 in recoverExpiredWorkers().
+					// This way they will remain in the DB but all other items will be processed first.
 					$class = get_class($ex);
 					logger("EXCEPTION: {$rnd} {$class}: " .	$ex->getMessage());
-
-					// TODO: what do we do with failed jobs?
 					$workid = false;
 				}
 			}
@@ -372,7 +363,7 @@ class QueueWorker
 			}
 		}
 
-		logger('Worker: ' . self::$queueWorker . ' processed ' . $jobs . ' jobs', LOGGER_DEBUG);
+		logger('Worker: ' . self::$queueWorker . ' with pid ' . self::$queueWorkerPid . ' processed ' . $jobs . ' jobs', LOGGER_DEBUG);
 	}
 
 	/**
@@ -400,15 +391,42 @@ class QueueWorker
 	 */
 	private function recoverExpiredWorkers(): void
 	{
-		$r = q("SELECT workerq_id FROM workerq WHERE workerq_reservationid IS NOT NULL
+		$workers = q("SELECT workerq_id, workerq_pid FROM workerq WHERE workerq_reservationid IS NOT NULL
 			AND workerq_processtimeout < %s
 			FOR UPDATE SKIP LOCKED",
 			db_utcnow()
 		);
 
-		if ($r) {
-			$ids = ids_to_querystr($r, 'workerq_id');
-			dbq("UPDATE workerq SET workerq_reservationid = NULL WHERE workerq_id IN ($ids)");
+		if (!$workers) {
+			return;
+		}
+
+		$alive = [];
+		$dead = [];
+
+		foreach($workers as $worker) {
+			if ($this->pidAlive($worker['workerq_pid'])) {
+				$alive[] = intval($worker['workerq_id']);
+			}
+			else {
+				$dead[] = intval($worker['workerq_id']);
+			}
+		}
+
+		if ($dead) {
+			// Release dead workers and set priority to 0
+			q("UPDATE workerq SET workerq_priority = 0, workerq_reservationid = NULL, workerq_pid = NULL, workerq_processtimeout = '0001-01-01 00:00:00' WHERE workerq_id IN (%s)",
+				implode(',', $dead)
+			);
+		}
+
+		if ($alive) {
+			// Extend processtimeout
+			q("UPDATE workerq SET workerq_processtimeout = %s + INTERVAL %s WHERE workerq_id IN (%s)",
+				db_utcnow(),
+				db_quoteinterval(self::$workerMaxAge . " SECOND"),
+				implode(',', $alive)
+			);
 		}
 	}
 
@@ -442,8 +460,56 @@ class QueueWorker
 		return !empty($r);
 	}
 
+	/**
+	 * Check if the item is an actual work item.
+	 *
+	 */
 	private function isWorkItem(): bool
 	{
 		return self::$workItem[0] !== 'Queueworker';
+	}
+
+
+	/**
+	 * Set pid for workid.
+	 *
+	 */
+	private function registerWorkerPid(int $workid): bool {
+		$stmt = DBA::$dba->db->prepare('UPDATE workerq
+			SET workerq_pid = :pid
+			WHERE workerq_id = :id
+			AND workerq_reservationid = :reservationid
+			AND workerq_pid IS NULL'
+		);
+
+		$stmt->execute([
+			'pid' => self::$queueWorkerPid,
+			'id' => $workid,
+			'reservationid' => self::$queueWorker
+		]);
+
+		return $stmt->rowCount() === 1;
+	}
+
+	/**
+	 * Check if pid is alive
+	 *
+	 */
+	private function pidAlive(int $pid): bool
+	{
+		if ($pid <= 0) {
+			return false;
+		}
+
+		if (function_exists('posix_kill')) {
+			return posix_kill($pid, 0);
+		}
+
+		// Fallback in case posix is not available
+		exec('kill -0 ' . $pid . ' 2>/dev/null', $output, $status);
+		return $status === 0;
+
+		// Linux only workaround will not work on BSDs
+		//return file_exists('/proc/' . $pid);
 	}
 }
