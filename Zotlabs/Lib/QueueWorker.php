@@ -2,7 +2,7 @@
 
 namespace Zotlabs\Lib;
 
-use Exception;
+use Throwable;
 use DBA;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\Exception\UnableToBuildUuidException;
@@ -348,12 +348,12 @@ class QueueWorker
 					// If there is no next job, this releases the worker slot and returns false.
 					$workid = $this->getNextWorkId($workid);
 				}
-				catch (Exception $ex) {
+				catch (Throwable $ex) {
 					// A failing worker will usually loose their PID
 					// and the failing items will get their priority set to 0 in recoverExpiredWorkers().
 					// This way they will remain in the DB but all other items will be processed first.
-					$class = get_class($ex);
-					logger("EXCEPTION: {$rnd} {$class}: " .	$ex->getMessage());
+					logger("EXCEPTION: {$rnd}: " . $ex->getMessage());
+					logger('EXCEPTION: ' . print_r($ex->getTrace(), true));
 					$workid = false;
 				}
 			}
