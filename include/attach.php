@@ -1997,7 +1997,7 @@ function attach_store_item($channel, $observer, $file) {
 	$arr['item_blocked'] = ((perm_is_allowed($channel['channel_id'], $observer['xchan_hash'], 'post_wall')) ? 0 : ITEM_MODERATED);
 	$arr['verb'] = 'Create';
 	$arr['target'] = $target;
-	$arr['target_type'] = 'Collection';
+	$arr['tgt_type'] = 'Collection';
 	$arr['obj_type'] = $type;
 	$arr['title'] = $file['filename'];
 
