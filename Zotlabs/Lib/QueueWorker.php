@@ -406,7 +406,7 @@ class QueueWorker
 		$dead = [];
 
 		foreach($workers as $worker) {
-			if ($this->pidAlive($worker['workerq_pid'])) {
+			if ($this->pidAlive(intval($worker['workerq_pid']))) {
 				$alive[] = intval($worker['workerq_id']);
 			}
 			else {
