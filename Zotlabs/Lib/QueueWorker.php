@@ -11,13 +11,13 @@ require_once 'include/dba/dba_transaction.php';
 
 class QueueWorker
 {
-	public static $queueWorker;
-	public static $queueWorkerPid;
-	public static $maxWorkers;
-	public static $workerMaxAge;
-	public static $workItem;
+	private static $queueWorker;
+	private static $queueWorkerPid;
+	private static $maxWorkers;
+	private static $workerMaxAge;
+	private static $workItem;
 
-	public static $defaultPriorities = [
+	private static $defaultPriorities = [
 		// If a daemon is not in this array, it will run with priority 1.
 		// Priority 0 is reserved for failing workers - see recoverExpiredWorkers().
 		'Notifier'         => 10,
@@ -294,7 +294,7 @@ class QueueWorker
 		proc_run($phpbin, 'Zotlabs/Daemon/Master.php', ['Queueworker', $workerid, $workid]);
 	}
 
-	public function process($workerid = null, $workid = null): void
+	private function process($workerid = null, $workid = null): void
 	{
 		self::$queueWorkerPid = getmypid();
 
