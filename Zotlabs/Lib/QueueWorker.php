@@ -407,6 +407,9 @@ class QueueWorker
 		$dead = [];
 
 		foreach($workers as $worker) {
+			// It should not happen under normal circumstances that workerq_pid is NULL here.
+			// This indicates that a job was claimed but not started yet - maybe due to an extended downtime.
+			// Anyway, in this case we should consider that job alive.
 			if (is_null($worker['workerq_pid']) || $this->pidAlive($worker['workerq_pid'])) {
 				$alive[] = intval($worker['workerq_id']);
 			}
