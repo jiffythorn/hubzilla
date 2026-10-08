@@ -18,7 +18,8 @@ class QueueWorker
 	public static $workItem;
 
 	public static $defaultPriorities = [
-		// Priority 0 is reserved for failing workers - see recoverExpiredWorkers()
+		// If a daemon is not in this array, it will run with priority 1.
+		// Priority 0 is reserved for failing workers - see recoverExpiredWorkers().
 		'Notifier'         => 10,
 		'Deliver'          => 10,
 		'Cache_query'      => 10,
