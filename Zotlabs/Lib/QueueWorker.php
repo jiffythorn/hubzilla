@@ -392,7 +392,9 @@ class QueueWorker
 	 */
 	private function recoverExpiredWorkers(): void
 	{
-		$workers = q("SELECT workerq_id, workerq_pid FROM workerq WHERE workerq_reservationid IS NOT NULL
+		$workers = q("SELECT workerq_id, workerq_pid FROM workerq
+			WHERE workerq_reservationid IS NOT NULL
+			AND workerq_pid IS NOT NULL
 			AND workerq_processtimeout < %s
 			FOR UPDATE SKIP LOCKED",
 			db_utcnow()
