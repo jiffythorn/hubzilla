@@ -5,7 +5,7 @@
 
 namespace Zotlabs\Thumbs;
 
-use Id3\Exception\NotCompliantException;
+use Throwable;
 use Id3\Id3Parser;
 use Zotlabs\Lib\Id3AlbumCover;
 
@@ -53,8 +53,9 @@ class Mp3audio {
 			} else {
 				logger("{$file} does not contain an album cover", LOGGER_DEBUG);
 			}
-		} catch (NotCompliantException $ex) {
-			logger("{$file} does not contain an ID3 tag.", LOGGER_DEBUG);
+		} catch (Throwable $ex) {
+			logger("ERROR processing {$file}: " . $ex->getMessage(), LOGGER_DEBUG);
+			logger(print_r($ex->getTrace(), true));
 		}
 	}
 }
