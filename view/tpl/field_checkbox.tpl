@@ -28,7 +28,7 @@
 		name="{{$field.0}}"
 		id="id_{{$field.0}}"
 		value="1"
-		{{if isset($field.2)}}checked="checked"{{/if}}
+		{{if isset($field.2) && $field.2}}checked="checked"{{/if}}
 		{{if isset($field.5)}}{{$field.5}}{{/if}}
 		>
 	<label for="id_{{$field.0}}" class="form-check-label">
