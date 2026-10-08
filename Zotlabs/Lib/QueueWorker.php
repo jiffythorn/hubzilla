@@ -394,7 +394,6 @@ class QueueWorker
 	{
 		$workers = q("SELECT workerq_id, workerq_pid FROM workerq
 			WHERE workerq_reservationid IS NOT NULL
-			AND workerq_pid IS NOT NULL
 			AND workerq_processtimeout < %s
 			FOR UPDATE SKIP LOCKED",
 			db_utcnow()
@@ -408,7 +407,7 @@ class QueueWorker
 		$dead = [];
 
 		foreach($workers as $worker) {
-			if ($this->pidAlive(intval($worker['workerq_pid']))) {
+			if (is_null($worker['workerq_pid']) || $this->pidAlive($worker['workerq_pid'])) {
 				$alive[] = intval($worker['workerq_id']);
 			}
 			else {
