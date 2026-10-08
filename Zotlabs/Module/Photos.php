@@ -209,7 +209,6 @@ class Photos extends \Zotlabs\Web\Controller {
 		}
 
 		if((argc() > 2) && ((x($_POST,'desc') !== false) || (x($_POST,'newtag') !== false))) {
-
 			$desc        = ((x($_POST,'desc'))    ? notags(trim($_POST['desc']))    : '');
 			$rawtags     = ((x($_POST,'newtag'))  ? notags(trim($_POST['newtag']))  : '');
 			$item_id     = ((x($_POST,'item_id')) ? intval($_POST['item_id'])       : 0);
@@ -317,24 +316,6 @@ class Photos extends \Zotlabs\Web\Controller {
 			if($p[0]['description'] !== $desc || strlen($rawtags))
 				$visibility = 1;
 
-			if(! $item_id) {
-				$item_id = photos_create_item(\App::$data['channel'],get_observer_hash(),$p[0],$visibility);
-
-			}
-
-			if($item_id) {
-				$r = q("SELECT * FROM item WHERE id = %d AND uid = %d LIMIT 1",
-					intval($item_id),
-					intval($page_owner_uid)
-				);
-
-				if($r) {
-					$old_tag    = $r[0]['tag'];
-					$old_inform = $r[0]['inform'];
-				}
-			}
-
-
 			// make sure the linked item has the same permissions as the photo regardless of any other changes
 			$x = q("update item set allow_cid = '%s', allow_gid = '%s', deny_cid = '%s', deny_gid = '%s', item_private = %d
 				where id = %d",
@@ -355,8 +336,6 @@ class Photos extends \Zotlabs\Web\Controller {
 					dbesc($resource_id),
 					intval($page_owner_uid)
 			);
-
-
 
 			if(strlen($rawtags)) {
 
