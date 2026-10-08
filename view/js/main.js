@@ -64,6 +64,8 @@ $.ajaxSetup({cache: false});
 var tf = new Function('n', 's', 'var k = s.split("/")['+aStr['plural_func']+']; return (k ? k : s);');
 
 $(document).ready(function() {
+	// This will collapse content that is not handled via updateConvItems()
+	collapseHeight();
 
 	$(document).on('click focus', '.comment-edit-form', handle_comment_form);
 	$(document).on('click', '.conversation-settings-link', getConversationSettings);
@@ -779,7 +781,7 @@ function updatePageItems(mode, data) {
 		}
 	}
 
-	collapseHeight();
+	setTimeout(collapseHeight, 10);
 }
 
 function updateConvItems(mode, data) {
