@@ -37,8 +37,6 @@ class Queue {
 
 		}
 
-		$deliveries = [];
-
 		if ($queue_id) {
 			$qItems = q("SELECT * FROM outq WHERE outq_hash = '%s' LIMIT 1",
 				dbesc($queue_id)
@@ -47,11 +45,13 @@ class Queue {
 			LibQueue::deliver($qItems[0]);
 		}
 		else {
-			$qItems = q("SELECT outq_hash FROM outq WHERE outq_scheduled < %s ",
+			$qItems = q("SELECT outq_hash FROM outq WHERE outq_scheduled < %s",
 				db_utcnow()
 			);
 
 			if ($qItems) {
+				$deliveries = [];
+
 				foreach ($qItems as $qItem) {
 					$deliveries[] = $qItem['outq_hash'];
 				}

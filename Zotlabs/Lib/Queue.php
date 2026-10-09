@@ -27,7 +27,7 @@ class Queue {
 	static function update($id, $add_priority = 0) {
 
 		logger('queue: requeue item ' . $id,LOGGER_DEBUG);
-		$x = q("select outq_created, outq_posturl from outq where outq_hash = '%s' limit 1",
+		$x = q("select outq_created, outq_posturl from outq where outq_hash = '%s'",
 			dbesc($id)
 		);
 		if(! $x)
@@ -122,22 +122,6 @@ class Queue {
 		);
 	}
 
-	static function set_delivered($id,$channel = 0) {
-		logger('queue: set delivered ' . $id,LOGGER_DEBUG);
-		$sql_extra = (($channel['channel_id']) ? " and outq_channel = " . intval($channel['channel_id']) . " " : '');
-
-		// Set the next scheduled run date so far in the future that it will be expired
-		// long before it ever makes it back into the delivery chain.
-
-		q("update outq set outq_delivered = 1, outq_updated = '%s', outq_scheduled = '%s' where outq_hash = '%s' $sql_extra ",
-			dbesc(datetime_convert()),
-			dbesc(datetime_convert('UTC','UTC','now + 5 days')),
-			dbesc($id)
-		);
-	}
-
-
-
 	static function insert($arr) {
 		static $stmt;
 
@@ -220,7 +204,9 @@ class Queue {
 		}
 
 		$arr = array('outq' => $outq, 'base' => $base, 'handled' => false, 'immediate' => $immediate);
+
 		call_hooks('queue_deliver', $arr);
+
 		if($arr['handled'])
 			return;
 
@@ -262,7 +248,14 @@ class Queue {
 
 			if($result['success']) {
 				logger('deliver: remote zot delivery succeeded to ' . $outq['outq_posturl']);
+
 				Libzot::process_response($outq['outq_posturl'], $result, $outq);
+
+				if ($outq['outq_priority']) {
+					// If outq_priority != 0 we have tried before to deliver to this destination and failed.
+					// Now we succeded - attempt to send more if there is something piled up for this URL.
+					self::deliverPiledUp($outq['outq_posturl']);
+				}
 			}
 			else {
 				logger('deliver: remote zot delivery failed to ' . $outq['outq_posturl']);
@@ -272,5 +265,23 @@ class Queue {
 		}
 		return;
 	}
+
+	static function deliverPiledUp(string $url): void
+	{
+		$hashes = q("select outq_hash from outq where outq_posturl = '%s' order by outq_created",
+			dbesc($url)
+		);
+		if ($hashes) {
+			$deliveries = [];
+			foreach ($hashes as $hash) {
+				$deliveries[] = $hash['outq_hash'];
+			}
+
+			if ($deliveries) {
+				do_delivery($deliveries);
+			}
+		}
+	}
+
 }
 
