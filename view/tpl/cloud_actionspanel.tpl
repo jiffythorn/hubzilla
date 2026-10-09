@@ -29,12 +29,11 @@
 			<input id="file-folder"type="hidden" name="folder" value="{{$folder}}" />
 			<input type="hidden" name="channick" value="{{$channick}}" />
 			<input type="hidden" name="return_url" value="{{$return_url}}" />
-			{{include file="field_checkbox.tpl" field=$notify}}
 			<div class="cloud-index attach-drop attach-drop-zone text-center p-4 mb-3" data-folder="{{$folder}}">
 				<span class="text-muted">{{$drop_area_label}}</span>
 			</div>
-			<div class="float-end btn-group">
-				<div class="btn-group">
+			<div class="">
+				<div class="float-end btn-group">
 					{{if $lockstate}}
 					<button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#aclModal" type="button">
 						<i class="jot-perms-icon bi bi-{{$lockstate}}"></i>
@@ -42,6 +41,7 @@
 					{{/if}}
 					<button id="upload-submit" class="btn btn-primary btn-sm float-end">{{$upload_submit}}</button>
 				</div>
+				{{include file="field_checkbox.tpl" field=$notify}}
 			</div>
 		</form>
 		<div class="clear"></div>

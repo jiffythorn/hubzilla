@@ -3,7 +3,6 @@
 	<div class="section-content-tools-wrapper">
 		<form action="#" enctype="multipart/form-data" method="post" name="photos-upload-form" id="photos-upload-form" class="acl-form" data-form_id="photos-upload-form" data-allow_cid='{{$allow_cid}}' data-allow_gid='{{$allow_gid}}' data-deny_cid='{{$deny_cid}}' data-deny_gid='{{$deny_gid}}'>
 			<input type="hidden" id="photos-upload-source" name="source" value="photos" />
-
 			<div class="mb-3">
 				<label for="photos-upload-album">{{$newalbum_label}}</label>
 				<input type="text" class="form-control" id="photos-upload-album" name="newalbum" placeholder="{{$newalbum_placeholder}}" value="{{$selname}}" list="dl-photo-upload">
@@ -21,9 +20,8 @@
 			</div -->
 			{{include file="field_input.tpl" field=$caption}}
 			{{include file="field_textarea.tpl" field=$body}}
-			{{include file="field_checkbox.tpl" field=$visible}}
-			<div class="pull-right btn-group">
-				<div class="btn-group">
+			<div class="">
+				<div class="float-end btn-group">
 					{{if $lockstate}}
 					<button id="dbtn-acl" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#aclModal" onclick="return false;">
 						<i id="jot-perms-icon" class="bi bi-{{$lockstate}}"></i>
@@ -31,7 +29,7 @@
 					{{/if}}
 					<button id="dbtn-submit" class="btn btn-primary btn-sm">{{$submit}}</button>
 				</div>
-
+				{{include file="field_checkbox.tpl" field=$visible}}
 			</div>
 			{{/if}}
 			<div class="clear"></div>
