@@ -13,6 +13,7 @@ namespace Zotlabs\Tests\Unit\Module;
 use PHPUnit\Framework\Attributes\After;
 use Zotlabs\Tests\Unit\UnitTestCase;
 use App;
+use DOMDocument;
 
 /**
  * Base class for writing module tests.
@@ -113,6 +114,50 @@ class TestCase extends UnitTestCase {
 	 */
 	protected function assertPageContains(string $needle): void {
 		$this->assertStringContainsString($needle, App::$page['content']);
+	}
+
+	/**
+	 * Helper to verify that a given tag is present in the rendered page.
+	 *
+	 * @param string $tag      The html tag name
+	 * @param array $attrs     An associative array of attributes that should
+	 *                         match.
+	 *
+	 * The `$attrs` array should contain the attributes to match as keys, and
+	 * the values of the attribute as values. The value will match if the given
+	 * attribute contains the value, even if the attribute contains more values.
+	 *
+	 * **Example:**
+	 *
+	 *     	$this->assertPageContainsTag(
+	 *			'input',
+	 *			['type' => 'checkbox', 'name' => 'block_reshares']
+	 *		);
+	 */
+	protected function assertPageContainsTag(string $tag, array $attrs): void {
+		$dom = new DOMDocument();
+		$dom->loadHTML(APP::$page['content'], LIBXML_NONET);
+		$elements = $dom->getElementsByTagName($tag);
+
+		$found = false;
+
+		foreach ($elements->getIterator() as $node) {
+			$nodeAttrs = $node->attributes;
+			$matches = array_filter(
+				$attrs,
+				fn ($v, $a) => $nodeAttrs->getNamedItem($a) !== null && stripos($node->getAttribute($a), $v) !== false,
+				ARRAY_FILTER_USE_BOTH
+			);
+
+			if ($matches === $attrs) {
+				$found = true;
+				break;
+			}
+		}
+
+		if (!$found) {
+			$this->assertTrue($found, 'tag not found in page');
+		}
 	}
 
 	/**
