@@ -400,7 +400,7 @@ class Channel extends Controller {
 						LEFT JOIN abook ON (item.author_xchan = abook.abook_xchan $abook_uids)
 						WHERE item.uid = %d
 						AND item.item_thread_top = 1
-						AND item.verb NOT IN ('Add', 'Remove')
+						AND item.id = item.parent
 						AND (abook.abook_blocked = 0 or abook.abook_flags is null)
 						AND item.item_wall = 1
 						$item_normal
