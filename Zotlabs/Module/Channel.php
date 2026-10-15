@@ -430,7 +430,8 @@ class Channel extends Controller {
 					$r = q("SELECT item.parent AS item_id, item.verb, $ordering FROM item
 						LEFT JOIN abook ON (item.author_xchan = abook.abook_xchan $abook_uids)
 						WHERE item.uid = %d
-						AND item.id = item.parent
+						AND item.item_thread_top = 1
+						AND item.verb NOT IN ('Add', 'Remove')
 						AND (abook.abook_blocked = 0 or abook.abook_flags is null)
 						AND item.item_wall = 1
 						$item_normal
