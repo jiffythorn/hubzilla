@@ -85,7 +85,7 @@ variables:
       - tests/results/
 
 default:
-  image: php:8.2
+  image: php:8.4
   before_script:
     # Install & enable Xdebug for code coverage reports
     - apt-get update
@@ -114,23 +114,23 @@ phpstan:
     - touch .htconfig.php
     - vendor/bin/phpstan --memory-limit=512M
 
-# PHP8.2 with MySQL 8.0
-php8.2_mysql8.0.22:
+# PHP8.4 with MySQL 8.0
+php8.4_mysql8.0.22:
   services:
     - mysql:8.0
   <<: *job_definition_mysql
   <<: *artifacts_template
 
-# PHP8.2 with MariaDB 10.6
-php8.2_mariadb10.6:
+# PHP8.4 with MariaDB 10.6
+php8.4_mariadb10.6:
   services:
     - name: mariadb:10.6
       alias: mysql
   <<: *job_definition_mysql
   <<: *artifacts_template
 
-# PHP8.2 with PostgreSQL 14
-php8.2_postgres14:
+# PHP8.4 with PostgreSQL 14
+php8.4_postgres14:
   services:
     - postgres:14-alpine
   <<: *job_definition_postgres
