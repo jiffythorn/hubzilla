@@ -406,7 +406,7 @@ class Channel extends Controller {
 						$permission_sql
 						$sql_extra
 						$sql_extra2
-						ORDER BY $ordering DESC, item_id
+						ORDER BY $ordering DESC
 						$pager_sql",
 						intval(App::$profile['profile_uid'])
 					);
