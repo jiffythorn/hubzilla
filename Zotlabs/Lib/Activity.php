@@ -2295,7 +2295,7 @@ class Activity {
 		}
 
 		if ($act->objprop('location')) {
-			$s['location'] = ((isset($act->objprop('location')['name'])) ? html2plain(purify_html($act->objprop('location')['name'])) : '');
+			$s['location'] = (($obj_type !== 'Event' && isset($act->objprop('location')['name'])) ? html2plain(purify_html($act->objprop('location')['name'])) : '');
 			if (isset($act->objprop('location')['latitude'], $act->objprop('location')['longitude'])) {
 				$s['coord'] = floatval($act->objprop('location')['latitude']) . ' ' . floatval($act->objprop('location')['longitude']);
 			}
