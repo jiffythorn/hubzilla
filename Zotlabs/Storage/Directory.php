@@ -562,7 +562,10 @@ class Directory extends DAV\Node implements DAV\ICollection, DAV\IQuota, DAV\IMo
 		$os_path = '';
 		$not_found = '';
 
-		for ($x = 1; $x < count($path_arr); $x++) {
+		// The category view is flat
+		$depth = isset($_REQUEST['cat']) ? 1 : count($path_arr);
+
+		for ($x = 1; $x < $depth; $x++) {
 			$r = q("select id, hash, filename, flags, is_dir from attach where folder = '%s' and filename = '%s' and uid = %d and is_dir != 0",
 				dbesc($folder),
 				dbesc($path_arr[$x]),
