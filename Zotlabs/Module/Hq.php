@@ -145,7 +145,7 @@ class Hq extends \Zotlabs\Web\Controller {
 				'$dbegin'  => '',
 				'$verb'    => '',
 				'$net'     => '',
-				'$mid'     => $encoded_item_hash ?? $item_hash
+				'$mid'     => (($encoded_item_hash) ? urlencode($encoded_item_hash) : urlencode($item_hash))
 			]);
 		}
 

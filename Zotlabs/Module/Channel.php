@@ -485,7 +485,7 @@ class Channel extends Controller {
 				'$file'      => '',
 				'$cats'      => (($category) ? urlencode($category) : ''),
 				'$tags'      => (($hashtags) ? urlencode($hashtags) : ''),
-				'$mid'       => $encoded_mid ?? $mid,
+				'$mid'       => (($encoded_mid) ? urlencode($encoded_mid) : urlencode($mid)),
 				'$verb'      => '',
 				'$net'       => '',
 				'$dend'      => $datequery,
