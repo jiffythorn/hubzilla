@@ -1,3 +1,15 @@
+Hubzilla 11.4.2 (2026-10-20)
+	- Fix comments not showing up under articles/cards after posting - issue #1999
+	- Fix content height not collapsed for articles/cards
+	- Fix event location stored as item location
+	- Fix files app category resulting in file not found
+	- Fix message id not urlencoded in mod channel and mod hq
+	- Improved query performance in mod channel
+	- Add link type support for person object icons
+	- Fix deleted hublocs included in Libzot::refresh() result set
+	- Fix registrations result check in mod sse_bs
+
+
 Hubzilla 11.4.1 (2026-09-09)
 	- Fix regression in settings in case where advanced theme settings were disabled
 	- Pubcrawl: fix PHP fatal error if a field in "to" was not a string
