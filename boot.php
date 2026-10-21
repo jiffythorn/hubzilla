@@ -684,7 +684,6 @@ function sys_boot(): bool {
 	// install without special fiddling
 
 	if (App::$install && file_exists('.htpreconfig.php')) {
-		// @phpstan-ignore include.fileNotFound
 		@include('.htpreconfig.php');
 	}
 
