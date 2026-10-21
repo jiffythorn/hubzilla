@@ -8,7 +8,6 @@ $baseDir = dirname($vendorDir);
 return array(
     'URLify' => array($vendorDir . '/jbroadway/urlify'),
     'SimplePie' => array($vendorDir . '/simplepie/simplepie/library'),
-    'PHPMD\\' => array($vendorDir . '/phpmd/phpmd/src/main/php'),
     'OAuth2' => array($vendorDir . '/bshaffer/oauth2-server-php/src'),
     'HTMLPurifier' => array($vendorDir . '/ezyang/htmlpurifier/library'),
 );
