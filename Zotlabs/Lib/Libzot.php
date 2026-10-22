@@ -523,7 +523,7 @@ class Libzot {
 			}
 			return true;
 		}
-		return false;
+		return true;
 	}
 
 
