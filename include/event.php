@@ -91,7 +91,7 @@ function format_event_obj($jobject) {
 			'content'   => bbcode($arr['description']),
 			'location'  => [ 'type' => 'Place', 'content' => $arr['location'] ],
 			'source'    => [ 'content' => format_event_bbcode($arr), 'mediaType' => 'text/bbcode' ],
-			'url'       => [ [ 'mediaType' => 'text/calendar', 'href' => z_root() . '/events/ical/' . $event['event_hash'] ] ],
+			'url'       => [ [ 'mediaType' => 'text/calendar', 'href' => z_root() . '/channel_calendar/ical/' . $event['event_hash'] ] ],
 			'actor'     => Activity::encode_person($r[0],false),
 		];
 		if(! $arr['nofinish']) {
@@ -1282,11 +1282,6 @@ function event_store_item($arr, $event, $deliver = true) {
 	);
 
 	if($r) {
-
-		//set_iconfig($r[0]['id'], 'event', 'timezone', $arr['timezone'], true);
-		//xchan_query($r);
-		//$r = fetch_post_tags($r,true);
-
 		$x = [
 			'type'      => 'Event',
 			'id'        => z_root() . '/event/' . $r[0]['resource_id'],
@@ -1299,7 +1294,7 @@ function event_store_item($arr, $event, $deliver = true) {
 			'content'   => bbcode($arr['description']),
 			'location'  => [ 'type' => 'Place', 'name' => $arr['location'] ],
 			'source'    => [ 'content' => format_event_bbcode($arr), 'mediaType' => 'text/bbcode' ],
-			'url'       => [ [ 'mediaType' => 'text/calendar', 'href' => z_root() . '/events/ical/' . $event['event_hash'] ] ],
+			'url'       => [ [ 'mediaType' => 'text/calendar', 'href' => z_root() . '/channel_calendar/ical/' . $event['event_hash'] ] ],
 			'actor'     => Activity::encode_person($r[0], false),
 			'attachment' => Activity::encode_attachment($r[0]),
 			'tag'       => Activity::encode_taxonomy($r[0])
@@ -1409,8 +1404,6 @@ function event_store_item($arr, $event, $deliver = true) {
 		else
 			$item_arr['plink'] = z_root() . '/display/' . $item_arr['uuid'];
 
-		set_iconfig($item_arr, 'event','timezone',$arr['timezone'],true);
-
 		$x = q("select * from xchan where xchan_hash = '%s' limit 1",
 				dbesc($arr['event_xchan'])
 		);
@@ -1427,7 +1420,7 @@ function event_store_item($arr, $event, $deliver = true) {
 				'content'    => $arr['description'],
 				'location'   => [ 'type' => 'Place', 'name' => $arr['location'] ],
 				'source'     => [ 'content' => format_event_bbcode($arr), 'mediaType' => 'text/bbcode' ],
-				'url'        => [ [ 'mediaType' => 'text/calendar', 'href' => z_root() . '/events/ical/' . $event['event_hash'] ] ],
+				'url'        => [ [ 'mediaType' => 'text/calendar', 'href' => z_root() . '/channel_calendar/ical/' . $event['event_hash'] ] ],
 				'actor'      => Activity::encode_person($z, false),
 				'attachment' => Activity::encode_attachment($item_arr),
 				'tag'        => Activity::encode_taxonomy($item_arr)
