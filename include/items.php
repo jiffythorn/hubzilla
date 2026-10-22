@@ -1495,28 +1495,38 @@ function purify_imported_object($obj) {
  * @param array $arr
  * @return array|string
  */
+
 function activity_sanitise($arr) {
-	if ($arr) {
-		if (is_array($arr)) {
-            $ret = [];
-			foreach ($arr as $key => $value) {
-				if (in_array($key, [ 'name', 'content', 'summary', 'nameMap', 'contentMap', 'summaryMap' ])) {
-					$ret[$key] = purify_imported_object($arr[$key]);
-					continue;
-				}
-				if (is_array($value)) {
-					$ret[$key] = activity_sanitise($value);
-                }
-			    return $ret;
-		    }
-        }
+	if (!is_array($arr)) {
+		return $arr ? htmlspecialchars($arr, ENT_COMPAT, 'UTF-8', false) : '';
+	}
+
+	$ret = [];
+
+	$sanitise_fields = [
+		'name',
+		'content',
+		'summary',
+		'nameMap',
+		'contentMap',
+		'summaryMap'
+	];
+
+	foreach ($arr as $key => $value) {
+		if (in_array($key, $sanitise_fields)) {
+			$ret[$key] = purify_imported_object($value);
+		}
+		elseif (is_array($value)) {
+			$ret[$key] = activity_sanitise($value);
+		}
 		else {
-			return $arr;
+			$ret[$key] = htmlspecialchars($value, ENT_COMPAT, 'UTF-8', false);
 		}
 	}
 
-	return '';
+	return $ret;
 }
+
 
 /**
  * @brief Sanitise a simple linear array.
