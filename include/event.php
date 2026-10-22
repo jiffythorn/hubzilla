@@ -1508,7 +1508,7 @@ function cdav_perms($needle, $haystack, $check_rw = false) {
 	foreach ($haystack as $item) {
 		if($check_rw) {
 			if(is_array($item['id'])) {
-				if ($item['id'][0] == $needle && $item['share-access'] != 2) {
+				if ($item['id'][1] == $needle && $item['share-access'] != 2) {
 					return $item['{DAV:}displayname'];
 				}
 			}
@@ -1520,7 +1520,7 @@ function cdav_perms($needle, $haystack, $check_rw = false) {
 		}
 		else {
 			if(is_array($item['id'])) {
-				if ($item['id'][0] == $needle) {
+				if ($item['id'][1] == $needle) {
 					return $item['{DAV:}displayname'];
 				}
 			}

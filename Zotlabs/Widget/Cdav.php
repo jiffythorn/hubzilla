@@ -62,7 +62,7 @@ class Cdav {
 
 				$json_source = '/cdav/calendar/json/' . $sabrecal['id'][0] . '/' . $sabrecal['id'][1];
 
-				$switch = get_pconfig(local_channel(), 'cdav_calendar', $sabrecal['id'][0]);
+				$switch = get_pconfig(local_channel(), 'cdav_calendar', $sabrecal['id'][1]);
 
 				$color = (($sabrecal['{http://apple.com/ns/ical/}calendar-color']) ? $sabrecal['{http://apple.com/ns/ical/}calendar-color'] : '#6cad39');
 

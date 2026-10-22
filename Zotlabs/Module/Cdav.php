@@ -193,7 +193,6 @@ class Cdav extends Controller {
 					logger("debug: body: " . $httpbody, LOGGER_DEBUG);
 
 					if($x = get_cdav_id($principalUri, argv(3), $cdavtable)) {
-
 						$cdavdata = $this->get_cdav_data($x['id'], $cdavtable);
 						$etag = (isset($_SERVER['HTTP_IF_MATCH']) ? $_SERVER['HTTP_IF_MATCH'] : false);
 
@@ -354,10 +353,10 @@ class Cdav extends Controller {
 
 				$id = explode(':', $_REQUEST['target']);
 
-				if(!cdav_perms($id[0],$calendars,true))
+				if(!cdav_perms($id[1],$calendars,true))
 					return;
 
-				$cdavdata = $this->get_cdav_data($id[0], 'calendarinstances');
+				$cdavdata = $this->get_cdav_data($id[1], 'calendarinstances');
 
 				$timezone = ((x($_POST,'timezone_select')) ? escape_tags(trim($_POST['timezone_select'])) : '');
 				$tz = (($timezone) ? $timezone : date_default_timezone_get());
@@ -433,10 +432,10 @@ class Cdav extends Controller {
 
 				$id = explode(':', $_REQUEST['id']);
 
-				if(! cdav_perms($id[0],$calendars))
+				if(! cdav_perms($id[1],$calendars))
 					return;
 
-				$cdavdata = $this->get_cdav_data($id[0], 'calendarinstances');
+				$cdavdata = $this->get_cdav_data($id[1], 'calendarinstances');
 
 				$mutations = [
 					'{DAV:}displayname' => escape_tags($_REQUEST['{DAV:}displayname']),
@@ -461,10 +460,12 @@ class Cdav extends Controller {
 
 				$id = explode(':', $_REQUEST['target']);
 
-				if(! cdav_perms($id[0],$calendars,true))
+				if(! cdav_perms($id[1],$calendars,true))
 					return;
 
-				$cdavdata = $this->get_cdav_data($id[0], 'calendarinstances');
+				$cdavdata = $this->get_cdav_data($id[1], 'calendarinstances');
+
+hz_syslog(print_r($cdavdata,true));
 
 				$timezone = ((x($_POST,'timezone_select')) ? escape_tags(trim($_POST['timezone_select'])) : '');
 				$tz = (($timezone) ? $timezone : date_default_timezone_get());
@@ -530,10 +531,10 @@ class Cdav extends Controller {
 
 				$id = explode(':', $_REQUEST['target']);
 
-				if(! cdav_perms($id[0],$calendars,true))
+				if(! cdav_perms($id[1],$calendars,true))
 					return;
 
-				$cdavdata = $this->get_cdav_data($id[0], 'calendarinstances');
+				$cdavdata = $this->get_cdav_data($id[1], 'calendarinstances');
 
 				$uri = $_REQUEST['uri'];
 
@@ -555,10 +556,10 @@ class Cdav extends Controller {
 
 				$id = [$_REQUEST['id'][0], $_REQUEST['id'][1]];
 
-				if(! cdav_perms($id[0],$calendars,true))
+				if(! cdav_perms($id[1],$calendars,true))
 					return;
 
-				$cdavdata = $this->get_cdav_data($id[0], 'calendarinstances');
+				$cdavdata = $this->get_cdav_data($id[1], 'calendarinstances');
 
 				$timezone = ((x($_POST,'timezone_select')) ? escape_tags(trim($_POST['timezone_select'])) : '');
 				$tz = (($timezone) ? $timezone : date_default_timezone_get());
@@ -614,7 +615,7 @@ class Cdav extends Controller {
 
 				$id = [intval($_REQUEST['calendarid']), intval($_REQUEST['instanceid'])];
 
-				if(! cdav_perms($id[0],$calendars))
+				if(! cdav_perms($id[1],$calendars))
 					return;
 
 				$hash = $_REQUEST['sharee'];
@@ -973,10 +974,10 @@ class Cdav extends Controller {
 				$editable = (($calendar['share-access'] == 2) ? 'false' : 'true');  // false/true must be string since we're passing it to javascript
 				$color = (($calendar['{http://apple.com/ns/ical/}calendar-color']) ? $calendar['{http://apple.com/ns/ical/}calendar-color'] : '#6cad39');
 				$sharer = (($calendar['share-access'] == 3) ? $calendar['{urn:ietf:params:xml:ns:caldav}calendar-description'] : '');
-				$switch = get_pconfig(local_channel(), 'cdav_calendar', $calendar['id'][0]);
+				$switch = get_pconfig(local_channel(), 'cdav_calendar', $calendar['id'][1]);
 				if($switch) {
 					$sources .= '{
-						id: ' . $calendar['id'][0] . ',
+						id: ' . $calendar['id'][1] . ',
 						url: \'/cdav/calendar/json/' . $calendar['id'][0] . '/' . $calendar['id'][1] . '\',
 						color: \'' . $color . '\'
 					 }, ';
@@ -1077,7 +1078,7 @@ class Cdav extends Controller {
 
 			$id = [argv(3), argv(4)];
 
-			if(! cdav_perms($id[0],$calendars))
+			if(! cdav_perms($id[1],$calendars))
 				json_return_and_die($events);
 
 			if (x($_GET,'start'))
@@ -1117,7 +1118,7 @@ class Cdav extends Controller {
 						$description = (string)$vevent->DESCRIPTION;
 						$location = (string)$vevent->LOCATION;
 						$timezone_str = (string)$vevent->DTSTART['TZID'];
-						$rw = ((cdav_perms($id[0],$calendars,true)) ? true : false);
+						$rw = ((cdav_perms($id[1],$calendars,true)) ? true : false);
 						$editable = $rw ? true : false;
 						$recurrent = ((isset($vevent->{'RECURRENCE-ID'})) ? true : false);
 
@@ -1165,6 +1166,8 @@ class Cdav extends Controller {
 
 			$cdavdata = $this->get_cdav_data($id, 'calendarinstances');
 
+hz_syslog(print_r($r,true));
+
 			set_pconfig(local_channel(), 'cdav_calendar', $id, argv(4));
 
 			Libsync::build_sync_packet(local_channel(), [
@@ -1182,11 +1185,11 @@ class Cdav extends Controller {
 		if(argc() == 5 && argv(1) === 'calendar' && argv(2) === 'drop' && intval(argv(3)) && intval(argv(4))) {
 			$id = [argv(3), argv(4)];
 
-			if(! cdav_perms($id[0],$calendars))
+			if(! cdav_perms($id[1],$calendars))
 				killme();
 
 			// get metadata before we delete it
-			$cdavdata = $this->get_cdav_data($id[0], 'calendarinstances');
+			$cdavdata = $this->get_cdav_data($id[1], 'calendarinstances');
 
 			$caldavBackend->deleteCalendar($id);
 
@@ -1206,7 +1209,7 @@ class Cdav extends Controller {
 			$id = [argv(3), argv(4)];
 			$hash = argv(5);
 
-			if(! cdav_perms($id[0],$calendars))
+			if(! cdav_perms($id[1],$calendars))
 				killme();
 
 			$sharee_arr = channelx_by_hash($hash);

@@ -418,7 +418,7 @@ function add_remove_json_source(source, color, editable, status) {
 
 	if(! id) {
 		parts = source.split('/');
-		id = parts[4];
+		id = parts[5];
 	}
 
 	var eventSource = calendar.getEventSourceById(id);
@@ -515,7 +515,7 @@ function on_submit() {
 		})
 		.done(function() {
 			var parts = $('#calendar_select').val().split(':');
-			var eventSource = calendar.getEventSourceById(parts[0]);
+			var eventSource = calendar.getEventSourceById(parts[1]);
 			if (eventSource) {
 				eventSource.refetch();
 			}
@@ -543,7 +543,7 @@ function on_delete() {
 		})
 		.done(function() {
 			var parts = $('#calendar_select').val().split(':');
-			var eventSource = calendar.getEventSourceById(parts[0]);
+			var eventSource = calendar.getEventSourceById(parts[1]);
 			eventSource.refetch();
 			reset_form();
 		});
