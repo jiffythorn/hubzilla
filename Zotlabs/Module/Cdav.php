@@ -465,8 +465,6 @@ class Cdav extends Controller {
 
 				$cdavdata = $this->get_cdav_data($id[1], 'calendarinstances');
 
-hz_syslog(print_r($cdavdata,true));
-
 				$timezone = ((x($_POST,'timezone_select')) ? escape_tags(trim($_POST['timezone_select'])) : '');
 				$tz = (($timezone) ? $timezone : date_default_timezone_get());
 
