@@ -931,10 +931,6 @@ function import_events($channel, $events) {
 			unset($event['id']);
 			$event['aid'] = $channel['channel_account_id'];
 			$event['uid'] = $channel['channel_id'];
-			convert_oldfields($event,'start','dtstart');
-			convert_oldfields($event,'finish','dtend');
-			convert_oldfields($event,'type','etype');
-			convert_oldfields($event,'ignore','dismissed');
 
 			create_table_from_array('event', $event);
 		}
@@ -952,8 +948,9 @@ function sync_events($channel, $events) {
 	if($channel && $events) {
 		foreach($events as $event) {
 
-			if((! $event['event_hash']) || (! $event['start']))
+			if (!$event['event_hash'] && !$event['dtstart']) {
 				continue;
+			}
 
 			if($event['event_deleted']) {
 				$r = q("delete from event where event_hash = '%s' and uid = %d",
@@ -966,11 +963,6 @@ function sync_events($channel, $events) {
 			unset($event['id']);
 			$event['aid'] = $channel['channel_account_id'];
 			$event['uid'] = $channel['channel_id'];
-
-			convert_oldfields($event,'start','dtstart');
-			convert_oldfields($event,'finish','dtend');
-			convert_oldfields($event,'type','etype');
-			convert_oldfields($event,'ignore','dismissed');
 
 			$exists = false;
 
@@ -986,6 +978,7 @@ function sync_events($channel, $events) {
 			}
 
 			if($exists) {
+				// TODO: update all at once
 				foreach($event as $k => $v) {
 					$r = q("UPDATE event SET " . TQUOT . "%s" . TQUOT . " = '%s' WHERE event_hash = '%s' AND uid = %d",
 						dbesc($k),
