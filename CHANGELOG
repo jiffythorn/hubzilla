@@ -1,3 +1,76 @@
+Hubzilla 12.0 (2026-??-??)
+	Features
+	- Add assertPageContainsTag() to TestCase class
+	- Add xchan_has_data hook for maintenance support in addons
+	- Add util/cleanup_deleted_hublocs maintenance script to remove deleted hublocs and and possibly its xchan resources
+	- Add util/cleanup_dead_sites maintenance script to cleanup dead sites and possibly their xchan resources
+	- Add site_type_by_handler() function
+	- Add ASObjectStorage class to safely support string values.
+
+	Maintenance
+	- Refactor activity_sanitize()
+	- Deprecate and remove storing of event timezone in iconfig
+	- Update composer libraries
+	- Bump minimal PHP version to 8.4
+	- Escalate catch to throwable because NotCompliantException did not catch all failure cases
+	- Rename PHPUnit test suites so that they can be run separately by their repo name
+	- Improved SetupTest performance
+	- Make fields in checkbox tpl actually optional
+	- DB update 1270 to enforce unique workerq_uuid at the DB level
+	- DB update 1269 to add an index to cache.updated
+	- Refactor Lib/QueueWorker to implement mutex when reserving work items also improved code quality
+	- DB update 1268 to add the mutex table
+	- Revert to HTML checkboxes for improved accessibility
+	- Implement Libzot::get_hublocs() in mod locs
+	- Refactor SessionHandler gc() to return the number of removed sessions instead of false/true which is deprecated since PHP 7.1
+	- DB update 1267 to add an index to item.source_xchan
+	- Refactor Daemon/Checksites to also include non-zot sites and move caller from Cron_weekly to Cron_daily
+	- Refactor ping_site() to add a hook for addons
+	- Remove deprecated pear/text_languagedetect library
+	- Remove dprecated field transaction_id in mod dirsearch
+	- DB update 1266 to add index to xchan.xchan_updated
+	- Start using xchan.xchan_updated
+	- Deprecate usage of #location format in include/conversation.php
+	- Add CONTRIBUTING.md
+	- Add LLM policy to developer documentation
+	- Add support for outbound RFC9421 HTTP Signatures (off by default)
+	- Remove redundant call to localize_item() in conversation()
+	- Check for public key and algo before proceeding to check inbound RFC9421 HTTP Signatures
+	- Add array_find_key() fwd compat function
+	- Stop LD-Signing outbound messages
+	- Be more specific with conversation -> comment -> reply in Lib/Enotify by also providing the thr_parent of the thr_parent
+	- Refactor localize_item()
+
+	Bugfixes
+	- Fix cal/cardDAV sync issues - issue #2001
+	- Fix channel calendar sync - issue #2001
+	- Fix Libzot::refresh() returning false in the case where Libzot::import_xchan() succeeded but no channel was provided - issue #2000
+	- Fix ical download path pointing to inexisting module
+	- Fix comments under articles/cards not showing up after posting - issue #1999
+	- Fix disfunctional file categories when directories were involved - issue #1988
+	- Fix event location stored as item location
+	- Fix partly broken backup delivery mechanism
+	- Fix collapse height not working in modules that do not have support for updateConvItem() yet
+	- Fix Config::Get() called directly in db_quoteinterval() causing unexpected results with some DB backends
+	- Fix for Mp3audio Thumbnailer crashing QueueWorker
+	- Fix remove_all_xchan_resources() not removing xchan photos from filesystem
+	- Fix Libzot::refresh() queries including deleted hublocs
+	- Fix imagesLoaded() not checking if an image counter actually exists
+	- Fix get_sys_channel() returned false in tests
+	- Fix warning in zotfinger test
+	- Fix issue in MessageFilter where $previousResult was not set after the first iteration - issue #1957
+	- Fix README.md
+	- Fix developer code_of_conduct.md
+	- Fix possibly undefined var in include/xchan.php
+	- Fix possibly undefined vars in Zotlabs\Lib\Connect
+	- Fix filetype not provided to attach_store() in all cases
+	- Fix issue where filetype was set to text/plain for css files although code permission was allowed
+	- Fix missing tooltips for webpage tools components
+	- Fix webpage tools share icon (was download)
+	- Fix missing default value for mod home login_on_homepage setting
+	- Fix inconsistent button labeling Edit -> Submit
+
+
 Hubzilla 11.4.2 (2026-10-20)
 	- Fix comments not showing up under articles/cards after posting - issue #1999
 	- Fix content height not collapsed for articles/cards
