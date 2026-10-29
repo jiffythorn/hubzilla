@@ -589,12 +589,8 @@ class Enotify {
 	}
 
 	$itemlink = z_root() . '/notify/view/' . $notify_id;
+
 	$msg = str_replace('$itemlink', $itemlink, $epreamble);
-
-	// wretched hack, but we don't want to duplicate all the preamble variations and we also don't want to screw up a translation
-
-	if ((\App::$language === 'en' || (! \App::$language)) && strpos($msg,', '))
-		$msg = substr($msg, strpos($msg,', ')+1);
 
 	$datarray['id'] = $notify_id;
 	$datarray['msg'] = $msg;
