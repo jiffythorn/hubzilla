@@ -180,8 +180,19 @@ class Activity {
 			logger('returned: ' . json_encode($y, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES), LOGGER_DEBUG);
 
 			if (isset($y['type']) && ActivityStreams::is_an_actor($y['type'])) {
+				// Workaround for GoToSocial returning a partial actor when fetching the key-id
+				if (empty($y['inbox']) && isset($y['publicKey']['owner'])) {
+					logger('fetching publicKey.owner', LOGGER_DEBUG);
+					$x = z_fetch_url($y['publicKey']['owner'], true, $redirects, ['headers' => $curlHeaders]);
+					if ($x['success']) {
+						$y = json_decode($x['body'], true);
+						logger('returned: ' . json_encode($y, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES), LOGGER_DEBUG);
+					}
+				}
+
 				logger('logger_stats_data cmd:Actor_fetch' . ' start:' . $start_timestamp . ' ' . 'end:' . microtime(true) . ' meta:' . $url . '#' . random_string(16));
 				btlogger('actor fetch');
+
 				$y['actor_cache_date'] = datetime_convert();
 				XConfig::Set($y['id'], 'system', 'actor_record', $y);
 			}
@@ -196,7 +207,6 @@ class Activity {
 			logger('fetch failed: ' . $url);
 			logger(print_r($x, true), LOGGER_DEBUG);
 		}
-
 
 		return null;
 	}
