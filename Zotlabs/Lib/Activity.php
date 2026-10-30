@@ -179,6 +179,7 @@ class Activity {
 			$y = json_decode($x['body'], true);
 			logger('returned: ' . json_encode($y, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES), LOGGER_DEBUG);
 
+			// Check for inbox to prevent overwriting of actor record by partial record from GoToSocial key-id fetch
 			if (isset($y['type'], $y['inbox']) && ActivityStreams::is_an_actor($y['type'])) {
 				logger('logger_stats_data cmd:Actor_fetch' . ' start:' . $start_timestamp . ' ' . 'end:' . microtime(true) . ' meta:' . $url . '#' . random_string(16));
 				btlogger('actor fetch');
