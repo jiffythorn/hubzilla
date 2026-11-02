@@ -1637,7 +1637,8 @@ CREATE TABLE IF NOT EXISTS workerq (
 	KEY workerq_priority (workerq_priority),
 	KEY workerq_reservationid (workerq_reservationid),
 	KEY workerq_processtimeout (workerq_processtimeout),
-	UNIQUE KEY workerq_uuid (workerq_uuid)
+	UNIQUE KEY workerq_uuid (workerq_uuid),
+	KEY workerq_reservationid_priority_id (workerq_reservationid, workerq_priority DESC, workerq_id)
 ) ENGINE = InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS mutex (
