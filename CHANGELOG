@@ -8,6 +8,7 @@ Hubzilla 12.0 (2026-??-??)
 	- Add ASObjectStorage class to safely support string values.
 
 	Maintenance
+	- DB update 1272 to add combined index for performance improvement in cases where workerq becomes huge
 	- Refactor activity_sanitize()
 	- Deprecate and remove storing of event timezone in iconfig
 	- Update composer libraries
@@ -42,6 +43,8 @@ Hubzilla 12.0 (2026-??-??)
 	- Refactor localize_item()
 
 	Bugfixes
+	- Fix GoToSocial key-id fetch overwriting actor object with partial actor
+	- Fix notifications text in cases where name contained a colon
 	- Fix cal/cardDAV sync issues - issue #2001
 	- Fix channel calendar sync - issue #2001
 	- Fix Libzot::refresh() returning false in the case where Libzot::import_xchan() succeeded but no channel was provided - issue #2000
