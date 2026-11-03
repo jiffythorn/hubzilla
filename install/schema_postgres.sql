@@ -496,12 +496,12 @@ CREATE TABLE "hubloc" (
   "hubloc_orphancheck" smallint NOT NULL DEFAULT '0',
   "hubloc_error" smallint NOT NULL DEFAULT '0',
   "hubloc_deleted" smallint NOT NULL DEFAULT '0',
-  PRIMARY KEY ("hubloc_id")
+  PRIMARY KEY ("hubloc_id"),
+  CONSTRAINT "hubloc_hash_url" UNIQUE ("hubloc_hash", "hubloc_url")
 );
 create index "hubloc_url" on hubloc ("hubloc_url");
 create index "hubloc_site_id" on hubloc ("hubloc_site_id");
 create index "hubloc_guid" on hubloc ("hubloc_guid");
-create index "hubloc_hash" on hubloc ("hubloc_hash");
 create index "hubloc_id_url" on hubloc ("hubloc_id_url");
 create index "hubloc_flags" on hubloc ("hubloc_flags");
 create index "hubloc_connect" on hubloc ("hubloc_connect");
@@ -515,6 +515,7 @@ create index "hubloc_primary" on hubloc ("hubloc_primary");
 create index "hubloc_orphancheck" on hubloc ("hubloc_orphancheck");
 create index "hubloc_error" on hubloc ("hubloc_error");
 create index "hubloc_deleted" on hubloc ("hubloc_deleted");
+
 CREATE TABLE "iconfig" (
   "id" serial NOT NULL,
   "iid" bigint NOT NULL DEFAULT '0',

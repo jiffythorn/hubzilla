@@ -507,7 +507,6 @@ CREATE TABLE IF NOT EXISTS `hubloc` (
   KEY `hubloc_site_id` (`hubloc_site_id`),
   KEY `hubloc_guid` (`hubloc_guid`),
   KEY `hubloc_id_url` (`hubloc_id_url`),
-  KEY `hubloc_hash` (`hubloc_hash`),
   KEY `hubloc_flags` (`hubloc_flags`),
   KEY `hubloc_connect` (`hubloc_connect`),
   KEY `hubloc_host` (`hubloc_host`),
@@ -519,7 +518,8 @@ CREATE TABLE IF NOT EXISTS `hubloc` (
   KEY `hubloc_primary` (`hubloc_primary`),
   KEY `hubloc_orphancheck` (`hubloc_orphancheck`),
   KEY `hubloc_deleted` (`hubloc_deleted`),
-  KEY `hubloc_error` (`hubloc_error`)
+  KEY `hubloc_error` (`hubloc_error`),
+  CONSTRAINT `hubloc_hash_url` UNIQUE (`hubloc_hash`, `hubloc_url`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `iconfig` (
