@@ -77,8 +77,8 @@ class AbConfig {
 
 
 	public static function Delete($chan, $xhash, $family = null, $key = null) {
-		$cat_sql = (($family !== null)) ? "AND cat = '" . dbesc($family) . "'" : '';
-		$key_sql = (($key !== null)) ? "AND k = '" . dbesc($key) . "'" : '';
+		$cat_sql = (($family !== null) ? "AND cat = '" . dbesc($family) . "'" : '');
+		$key_sql = (($key !== null) ? "AND k = '" . dbesc($key) . "'" : '');
 
 		$r = q("delete from abconfig where chan = %d and xchan = '%s' $cat_sql $key_sql",
 			intval($chan),
