@@ -1712,28 +1712,21 @@ class Activity {
 	}
 
 	static function unfollow($channel, $act) {
-
-		$contact = null;
-
-		/* @FIXME This really needs to be a signed request. */
-
 		/* actor is unfollowing $channel */
 
 		$person_obj = $act->actor;
 
 		if (is_array($person_obj)) {
-
 			$r = q("select * from abook left join xchan on abook_xchan = xchan_hash where abook_xchan = '%s' and abook_channel = %d limit 1",
 				dbesc($person_obj['id']),
 				intval($channel['channel_id'])
 			);
+
 			if ($r) {
 				// remove all permissions they provided
-				AbConfig::Delete($channel['channel_id'], $r[0]['xchan_hash'], 'system', 'their_perms');
+				AbConfig::Delete($channel['channel_id'], $r[0]['xchan_hash'], 'their_perms');
 			}
 		}
-
-		return;
 	}
 
 	public static function drop($channel, $observer, $act) {
