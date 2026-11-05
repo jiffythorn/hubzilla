@@ -75,6 +75,34 @@ Hubzilla 12.0 (2026-??-??)
 	- Fix missing default value for mod home login_on_homepage setting
 	- Fix inconsistent button labeling Edit -> Submit
 
+	Addon
+	- Pubcrawl: fix undo.follow.object.id not the same as the follow.id
+	- Superblock: fix test errors
+	- Diaspora: fix slightly broken backup delivery mechanism
+	- Pubcrawl: fix slightly broken backup delivery mechanism
+	- Pubcrawl: remove not yet supported move activity
+	- Cart: add mentainance hook xchan_has_data
+	- Cart: remove unused construct_page hook
+	- Pubcrawl: implement ping_site hook
+	- Diaspora: implement ping_site hook
+	- Wiki: fix code allowed flag not respected
+	- Simplenotes: support displaying of images in notes
+	- Superblock: add block incoming field to settings
+	- Superblock: add option to drop incoming activities
+	- Superblock: test channel block with invalid expire
+	- Superblock: don't allow ChannelBlocks without hash
+	- Superblock: add SuperblockSettings class
+	- Superblock: add settings form
+	- Superblock: add settings module
+	- Planets: streamline with how location is rendered in items
+	- Openstreetmaps: bump render_location hook priority
+	- Pubcrawl: optional support for outbound RFC9421 HTTP signatures
+	- Workflow: only add dropdown extras on valid uid
+	- Sse: update name and description to better reflect what it really does
+	- Cart: port to ASObjectStorage
+	- Deliverynotice: port to ASObjectStorage
+	- Diaspora: port to ASObjectStorage
+
 
 Hubzilla 11.4.2 (2026-10-20)
 	- Fix comments not showing up under articles/cards after posting - issue #1999
