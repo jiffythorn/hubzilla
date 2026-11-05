@@ -5,7 +5,7 @@
  *   * Description: Hubzilla standard theme
  *   * Version: 2.2
  *   * MinVersion: 10.6
- *   * MaxVersion: 12.0
+ *   * MaxVersion: 13.0
  *   * Author: Fabrixxm
  *   * Maintainer: Mike Macgirvin
  *   * Maintainer: Mario Vavti
