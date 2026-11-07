@@ -44,6 +44,7 @@ Hubzilla 12.0 (2026-??-??)
 	- Refactor localize_item()
 
 	Bugfixes
+	- Fix js error when reacting on invite type items
 	- Fix unfollow not removing perms - issue #2003
 	- Fix GoToSocial key-id fetch overwriting actor object with partial actor
 	- Fix notifications text in cases where name contained a colon
