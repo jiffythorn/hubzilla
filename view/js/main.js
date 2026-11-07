@@ -1764,7 +1764,7 @@ function dolike(ident, verb) {
 
 			// this is a bit tricky since the top level thread wrapper wraps the whole thread
 			if($('#thread-wrapper-' + data.orig_id).hasClass('toplevel_item')) {
-				var wrapper = $('<div></div>').html( data.html ).find('#wall-item-outside-wrapper-' + data.id);
+				var wrapper = $('<div></div>').html(data.html).find('#wall-item-outside-wrapper-' + data.id);
 				$('#wall-item-outside-wrapper-' + data.orig_id).html(wrapper[0].innerHTML);
 				// those were not replaced - swap the id
 				$('#thread-wrapper-' + data.orig_id).attr('id', 'thread-wrapper-' + data.id);
