@@ -8,6 +8,7 @@ Hubzilla 12.0 (2026-??-??)
 	- Add ASObjectStorage class to safely support string values.
 
 	Maintenance
+	- Streamline app icon color
 	- DB update 1273 to add a combined unique constraint on hubloc_hash and hubloc_url
 	- DB update 1272 to add combined index for performance improvement in cases where workerq becomes huge
 	- Refactor activity_sanitize()
