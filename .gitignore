@@ -23,6 +23,7 @@ Thumbs.db
 .htconfig.php
 favicon.*
 addon/
+view/site
 widget/
 custom/
 /store/
@@ -67,6 +68,8 @@ nbproject/
 *.kdev4
 # PHPStorm
 .idea/
+# VSCode
+.vscode/
 
 ## composer
 # locally installed composer binary
@@ -104,6 +107,10 @@ vendor/phpunit/
 vendor/psr/container/
 vendor/sebastian/
 vendor/squizlabs/
+vendor/symfony/config/
+vendor/symfony/dependency-injection/
+vendor/symfony/service-contracts/
+vendor/symfony/var-exporter/
 vendor/theseer/
 # /info is a directory containing site-specific HTML documents
 /info/
