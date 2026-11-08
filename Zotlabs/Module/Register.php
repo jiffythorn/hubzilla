@@ -440,12 +440,6 @@ class Register extends Controller {
 			return $mod->get();
 		}
 
-		if(intval(Config::Get('system','register_policy')) == REGISTER_APPROVE) {
-			$register_msg = ['register_msg', t('Why do you want to join this hub?'), ((x($_REQUEST,'register_msg')) ? $_REQUEST['register_msg'] : ''), t('This will help to review your registration')];
-			$registration_is = t('Registration on this hub is by approval only.');
-			$other_sites = '<a href="pubsites">' . t('Register at another affiliated hub if preferred') . '</a>';
-		}
-
 		$duty = zar_register_dutystate();
 
 		if (!Config::Get('system', 'register_duty_jso')) {
@@ -463,8 +457,15 @@ class Register extends Controller {
 		}
 
 		$opal = self::check_reg_limits();
-		if ( $opal['is'])
-			 $duty['atform'] = 'disabled';
+		if ($opal['is']) {
+			$duty['atform'] = 'disabled';
+		}
+
+		if(intval(Config::Get('system','register_policy')) == REGISTER_APPROVE) {
+			$register_msg = ['register_msg', t('Why do you want to join this hub?'), ((x($_REQUEST,'register_msg')) ? $_REQUEST['register_msg'] : ''), t('This will help to review your registration'), $duty['atform']];
+			$registration_is = t('Registration on this hub is by approval only.');
+			$other_sites = '<a href="pubsites">' . t('Register at another affiliated hub if preferred') . '</a>';
+		}
 
 		// Configurable terms of service link
 		$tosurl = Config::Get('system','tos_url');
@@ -506,9 +507,9 @@ class Register extends Controller {
 
 		$invite_code  = array('invite_code', t('Please enter your invitation code'), ((x($_REQUEST,'invite_code')) ? strip_tags(trim($_REQUEST['invite_code'])) : ""));
 
-		$name = array('name', t('Your name'), ((x($_REQUEST,'name')) ? $_REQUEST['name'] : ''), t('Real name is preferred'), '', '', $duty['atform']);
+		$name = array('name', t('Your name'), ((x($_REQUEST,'name')) ? $_REQUEST['name'] : ''), t('Real name is preferred'), '', $duty['atform']);
 		$nickhub = '@' . str_replace(array('http://','https://','/'), '', Config::Get('system','baseurl'));
-		$nickname = array('nickname', t('Choose a short nickname'),	((x($_REQUEST,'nickname')) ? $_REQUEST['nickname'] : ''), t('Your nickname will be used to create an easy to remember channel address'), '', '', $duty['atform']);
+		$nickname = array('nickname', t('Choose a short nickname'),	((x($_REQUEST,'nickname')) ? $_REQUEST['nickname'] : ''), t('Your nickname will be used to create an easy to remember channel address'), '', $duty['atform']);
 
 		$tos = array('tos', $label_tos, ((x($_REQUEST,'tos')) ? $_REQUEST['tos'] : ''), '', [t('No'),t('Yes')], $duty['atform']);
 
