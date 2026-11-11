@@ -42,11 +42,10 @@ class MailerTest extends UnitTestCase {
 				$this->identicalTo($recipient),
 				$this->identicalTo($subject),
 				$this->identicalTo($body),
-				$this->identicalTo(<<<EOF
-					From:  <Administrator@{$hostname}>
-					Reply-To:  <noreply@{$hostname}>
-					Content-Type: text/plain; charset=UTF-8
-					EOF
+				$this->identicalTo(
+					"From:  <Administrator@{$hostname}>" . "\r\n" .
+					"Reply-To:  <noreply@{$hostname}>" . "\r\n" .
+					"Content-Type: text/plain; charset=UTF-8"
 				)
 			)
 			->willReturn(true);
