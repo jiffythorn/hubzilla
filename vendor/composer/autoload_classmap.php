@@ -2523,6 +2523,8 @@ return array(
     'Zotlabs\\Update\\_1269' => $baseDir . '/Zotlabs/Update/_1269.php',
     'Zotlabs\\Update\\_1270' => $baseDir . '/Zotlabs/Update/_1270.php',
     'Zotlabs\\Update\\_1271' => $baseDir . '/Zotlabs/Update/_1271.php',
+    'Zotlabs\\Update\\_1272' => $baseDir . '/Zotlabs/Update/_1272.php',
+    'Zotlabs\\Update\\_1273' => $baseDir . '/Zotlabs/Update/_1273.php',
     'Zotlabs\\Web\\Controller' => $baseDir . '/Zotlabs/Web/Controller.php',
     'Zotlabs\\Web\\HTTPHeaders' => $baseDir . '/Zotlabs/Web/HTTPHeaders.php',
     'Zotlabs\\Web\\HTTPSig' => $baseDir . '/Zotlabs/Web/HTTPSig.php',

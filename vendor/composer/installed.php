@@ -1,9 +1,9 @@
 <?php return array(
     'root' => array(
         'name' => 'zotlabs/hubzilla',
-        'pretty_version' => 'dev-master',
-        'version' => 'dev-master',
-        'reference' => '6bab8d98f44c4e99768aff18c5d68378cfcd0e89',
+        'pretty_version' => 'dev-12.0RC',
+        'version' => 'dev-12.0RC',
+        'reference' => '842bd18019cac5635c11db64516e31b1a30ffb44',
         'type' => 'application',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -542,9 +542,9 @@
             'dev_requirement' => false,
         ),
         'zotlabs/hubzilla' => array(
-            'pretty_version' => 'dev-master',
-            'version' => 'dev-master',
-            'reference' => '6bab8d98f44c4e99768aff18c5d68378cfcd0e89',
+            'pretty_version' => 'dev-12.0RC',
+            'version' => 'dev-12.0RC',
+            'reference' => '842bd18019cac5635c11db64516e31b1a30ffb44',
             'type' => 'application',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
