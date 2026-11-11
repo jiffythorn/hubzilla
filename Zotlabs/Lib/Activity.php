@@ -3128,7 +3128,7 @@ class Activity {
 		);
 
 		if ($r) {
-			if ($item['edited'] > $r[0]['edited']) {
+			if ($item['edited'] >= $r[0]['edited']) {
 				// Only update the object cache if there is no owner/author mismatch.
 				if ($r[0]['owner_xchan'] === $item['owner_xchan'] && $r[0]['author_xchan'] === $item['author_xchan']) {
 					ObjCache::Set($item['mid'], $act->data);
