@@ -69,8 +69,8 @@ class Mailer {
 
 		$messageHeader =
 			$this->params['additionalMailHeader'] .
-			"From: $fromName <{$this->params['fromEmail']}>" . PHP_EOL .
-			"Reply-To: $fromName <{$this->params['replyTo']}>" . PHP_EOL .
+			"From: $fromName <{$this->params['fromEmail']}>" . "\r\n" .
+			"Reply-To: $fromName <{$this->params['replyTo']}>" . "\r\n" .
 			"Content-Type: text/plain; charset=UTF-8";
 
 		// send the message
