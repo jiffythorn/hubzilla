@@ -46,6 +46,7 @@ Hubzilla 12.0 (2026-??-??)
 	- Refactor localize_item()
 
 	Bugfixes
+	- Fix email header separator - must be CRLF according to RFC5322
 	- Fix updates done within the same second dismissed
 	- Fix disabled state of some form elements if registration is not on duty
 	- Fix js error when reacting on invite type items
