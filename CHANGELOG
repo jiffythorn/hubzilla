@@ -8,6 +8,7 @@ Hubzilla 12.0 (2026-??-??)
 	- Add ASObjectStorage class to safely support string values.
 
 	Maintenance
+	- Refactor Activity::update_poll() to utilize item_store_update() instead of custom update queries
 	- Streamline app icon color
 	- DB update 1273 to add a combined unique constraint on hubloc_hash and hubloc_url
 	- DB update 1272 to add combined index for performance improvement in cases where workerq becomes huge
@@ -45,6 +46,7 @@ Hubzilla 12.0 (2026-??-??)
 	- Refactor localize_item()
 
 	Bugfixes
+	- Fix updates done within the same second dismissed
 	- Fix disabled state of some form elements if registration is not on duty
 	- Fix js error when reacting on invite type items
 	- Fix unfollow not removing perms - issue #2003
@@ -79,6 +81,7 @@ Hubzilla 12.0 (2026-??-??)
 	- Fix inconsistent button labeling Edit -> Submit
 
 	Addon
+	- Diaspora: fix updates done within the same second dismissed
 	- Pubcrawl: fix undo.follow.object.id not the same as the follow.id
 	- Superblock: fix test errors
 	- Diaspora: fix slightly broken backup delivery mechanism
