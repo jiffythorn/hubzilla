@@ -1915,7 +1915,7 @@ class Libzot {
 					continue;
 				}
 				// Maybe it has been edited?
-				elseif ($arr['edited'] > $r[0]['edited']) {
+				elseif ($arr['edited'] >= $r[0]['edited']) {
 					$arr['id']  = $r[0]['id'];
 					$arr['uid'] = $channel['channel_id'];
 

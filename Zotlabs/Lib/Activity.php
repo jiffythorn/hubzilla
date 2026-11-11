@@ -17,6 +17,7 @@ require_once('include/event.php');
 require_once('include/html2plain.php');
 require_once('include/items.php');
 require_once('include/markdown.php');
+require_once('include/dba/dba_transaction.php');
 
 class Activity {
 
@@ -2059,27 +2060,24 @@ class Activity {
 			return false;
 		}
 
-		$relatedItem = find_related($pollItem);
+		$transaction = new \DbaTransaction(DBA::$dba);
 
-		$ids = (($relatedItem) ? $pollItem['id'] . ',' . $relatedItem['id'] : $pollItem['id']);
-
-		dbq("START TRANSACTION");
 		// Using the provided items as is will produce desastrous race conditions
 		// in case of multiple choice polls - hence:
 
-		$items = dbq("SELECT * FROM item WHERE id in ($ids) FOR UPDATE");
+		$r = q("SELECT * FROM item WHERE id = %d FOR UPDATE",
+			intval($pollItem['id'])
+		);
 
-		foreach ($items as $item) {
-			if ($item['id'] === $pollItem['id']) {
-				$pollItem = $item;
-			}
-			if (!empty($relatedItem['id']) && $item['id'] === $relatedItem['id']) {
-				$relatedItem = $item;
-			}
+		if (!$r) {
+			logger('poll item not found');
+			return false;
 		}
 
-		$o = (new ASObjectStorage($pollItem['obj']))->decode();
-        if (! is_array($o)) {
+		$item = $r[0];
+
+		$o = (new ASObjectStorage($item['obj']))->decode();
+        if (!is_array($o)) {
             logger('Could not de-reference object.');
             return false;
         }
@@ -2094,8 +2092,8 @@ class Activity {
 			$mid = $response['mid'];
 			$content = trim($response['title']);
 
-			$r = q("select mid, title from item where parent_mid = '%s' and author_xchan = '%s' and mid != parent_mid ",
-				dbesc($pollItem['mid']),
+			$r = q("SELECT mid, title FROM item WHERE parent_mid = '%s' AND author_xchan = '%s' AND mid != parent_mid",
+				dbesc($item['mid']),
 				dbesc($response['author_xchan'])
 			);
 
@@ -2124,13 +2122,11 @@ class Activity {
 				for ($c = 0; $c < count($o['anyOf']); $c++) {
 					if (trim($o['anyOf'][$c]['name']) === $content) {
 						$answer_found = true;
+						$replies = $o['anyOf'][$c]['replies']['items'] ?? [];
 
-
-						if (is_array($o['anyOf'][$c]['replies'])) {
-							foreach ($o['anyOf'][$c]['replies'] as $reply) {
-								if (is_array($reply) && array_key_exists('id', $reply) && $reply['id'] === $mid) {
-									$foundPrevious = true;
-								}
+						foreach ($replies as $reply) {
+							if (is_array($reply) && array_key_exists('id', $reply) && $reply['id'] === $mid) {
+								$foundPrevious = true;
 							}
 						}
 
@@ -2144,11 +2140,11 @@ class Activity {
 				for ($c = 0; $c < count($o['oneOf']); $c++) {
 					if (trim($o['oneOf'][$c]['name']) === $content) {
 						$answer_found = true;
-						if (is_array($o['oneOf'][$c]['replies'])) {
-							foreach ($o['oneOf'][$c]['replies'] as $reply) {
-								if (is_array($reply) && array_key_exists('id', $reply) && $reply['id'] === $mid) {
-									$foundPrevious = true;
-								}
+						$replies = $o['oneOf'][$c]['replies']['items'] ?? [];
+
+						foreach ($replies as $reply) {
+							if (is_array($reply) && array_key_exists('id', $reply) && $reply['id'] === $mid) {
+								$foundPrevious = true;
 							}
 						}
 
@@ -2160,9 +2156,9 @@ class Activity {
 				}
 			}
 		}
-		if ($pollItem['comments_closed'] > DBA::$dba->get_null_date()) {
-			if ($pollItem['comments_closed'] > datetime_convert()) {
-				$o['closed'] = datetime_convert('UTC', 'UTC', $pollItem['comments_closed'], ATOM_TIME);
+		if ($item['comments_closed'] > DBA::$dba->get_null_date()) {
+			if ($item['comments_closed'] > datetime_convert()) {
+				$o['closed'] = datetime_convert('UTC', 'UTC', $item['comments_closed'], ATOM_TIME);
 				// set this to force an update
 				$answer_found = true;
 			}
@@ -2170,41 +2166,24 @@ class Activity {
 
 		// A change was made locally
 		if ($response && $answer_found && !$foundPrevious) {
+			$item['obj'] = $o;
+			$item['edited'] = datetime_convert();
 
-			// update this copy
-			$i = [$pollItem];
-			xchan_query($i, true);
-			$i = fetch_post_tags($i);
-			$i[0]['obj'] = $o;
+			$update = item_store_update($item);
 
-			$edited = datetime_convert();
-			$i[0]['edited'] = $edited;
+			if ($update['success']) {
+				$update_item = [$update['item']];
+				xchan_query($update_item);
 
-			// create the new object
-			$newObj = self::build_packet(self::encode_activity($i[0]), $channel, true);
+				$encoded_item = Activity::build_packet(Activity::encode_activity($update_item[0]), $channel, false);
+				ObjCache::Set($update_item[0]['mid'], $encoded_item);
 
-			// and immediately update the db
-			$u = q("UPDATE item
-				SET obj = (
-					CASE
-					WHEN item.id = %d THEN '%s'
-					WHEN item.id = %d THEN '%s'
-					END
-				),
-				edited = '%s'
-				WHERE id IN ($ids)",
-				intval($pollItem['id']),
-				dbesc(json_encode($o)),
-				intval($relatedItem['id']),
-				dbesc($newObj),
-				dbesc($edited)
-			);
+				$transaction->commit();
 
-			dbq("COMMIT");
-
-			Master::Summon(['Notifier', 'edit_post', $pollItem['id'], $response['mid']]);
-			if (!empty($relatedItem['id'])) {
-				Master::Summon(['Notifier', 'edit_post', $relatedItem['id'], $response['mid']]);
+				Master::Summon(['Notifier', 'edit_post', $update['item_id'], $response['mid']]);
+				if (intval($update['approval_id'])) {
+					Master::Summon(['Notifier', 'edit_post', $update['approval_id'], $response['mid']]);
+				}
 			}
 		}
 
@@ -3128,7 +3107,7 @@ class Activity {
 		);
 
 		if ($r) {
-			if ($item['edited'] > $r[0]['edited']) {
+			if ($item['edited'] >= $r[0]['edited']) {
 				// Only update the object cache if there is no owner/author mismatch.
 				if ($r[0]['owner_xchan'] === $item['owner_xchan'] && $r[0]['author_xchan'] === $item['author_xchan']) {
 					ObjCache::Set($item['mid'], $act->data);
