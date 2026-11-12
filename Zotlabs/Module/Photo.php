@@ -148,9 +148,9 @@ class Photo extends \Zotlabs\Web\Controller {
 			}
 
 			if (!$data) {
-			    $data = file_get_contents($default);
-			    $mimetype = 'image/png';
-			    $modified = filemtime($default);
+				$data = file_get_contents($default);
+				$mimetype = 'image/png';
+				$modified = filemtime($default);
 			}
 
 			$cachecontrol .= ', must-revalidate';
@@ -176,12 +176,12 @@ class Photo extends \Zotlabs\Web\Controller {
 			// @FIXME It seems this part doesn't work because we are not setting such cookie
 			$cookie_value = false;
 			if (isset($_COOKIE['devicePixelRatio'])) {
-			  $cookie_value = intval($_COOKIE['devicePixelRatio']);
+				$cookie_value = intval($_COOKIE['devicePixelRatio']);
 			}
 			else {
-			  // Force revalidation of cache on next request
-			  // $prvcachecontrol = 'no-cache';
-			  $status = 'no cookie';
+				// Force revalidation of cache on next request
+				// $prvcachecontrol = 'no-cache';
+				$status = 'no cookie';
 			}
 
 			$resolution = 0;
