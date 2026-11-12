@@ -124,13 +124,13 @@ class Photo extends \Zotlabs\Web\Controller {
 				);
 
 				if ($r) {
-				    $modified = strtotime($r[0]['edited'] . "Z");
-				    $mimetype = $r[0]['mimetype'];
-				    if(intval($r[0]['os_storage'])) {
-				        $data = file_get_contents(dbunescbin($r[0]['content']));
+					$modified = strtotime($r[0]['edited'] . "Z");
+					$mimetype = $r[0]['mimetype'];
+					if(intval($r[0]['os_storage'])) {
+						$data = file_get_contents(dbunescbin($r[0]['content']));
 					}
-				    else {
-				        $data = dbunescbin($r[0]['content']);
+					else {
+						$data = dbunescbin($r[0]['content']);
 					}
 				}
 
@@ -194,7 +194,7 @@ class Photo extends \Zotlabs\Web\Controller {
 				$photo = substr($photo,0,-2);
 				// If viewing on a high-res screen, attempt to serve a higher resolution image:
 				if ($resolution == 2 && ($cookie_value > 1))
-				    $resolution = 1;
+					$resolution = 1;
 			}
 
 			$r = q("SELECT * FROM photo WHERE resource_id = '%s' AND imgscale = %d LIMIT 1",
@@ -263,7 +263,7 @@ class Photo extends \Zotlabs\Web\Controller {
 		$etag = '"' . md5($data . $modified) . '"';
 
 		if ($modified == 0) {
-		    $modified = time();
+			$modified = time();
 		}
 
 		header_remove('Pragma');
