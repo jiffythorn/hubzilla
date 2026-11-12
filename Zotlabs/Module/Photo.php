@@ -122,16 +122,19 @@ class Photo extends \Zotlabs\Web\Controller {
 					intval($uid),
 					intval(PHOTO_PROFILE)
 				);
-				if($r) {
+
+				if ($r) {
 				    $modified = strtotime($r[0]['edited'] . "Z");
 				    $mimetype = $r[0]['mimetype'];
-				    if(intval($r[0]['os_storage']))
+				    if(intval($r[0]['os_storage'])) {
 				        $data = file_get_contents(dbunescbin($r[0]['content']));
-				    else
+					}
+				    else {
 				        $data = dbunescbin($r[0]['content']);
+					}
 				}
 
-				if(! $data) {
+				if (!$data) {
 					$d = [ 'imgscale' => $resolution, 'channel_id' => $uid, 'default' => $default, 'data'  => '', 'mimetype' => '' ];
 					call_hooks('get_profile_photo',$d);
 
@@ -144,9 +147,8 @@ class Photo extends \Zotlabs\Web\Controller {
 				}
 			}
 
-			if(! $data) {
-			    $x = z_fetch_url(z_root() . '/' . $default, true, 0, [ 'novalidate' => true ]);
-			    $data = ($x['success'] ? $x['body'] : EMPTY_STR);
+			if (!$data) {
+			    $data = file_get_contents($default);
 			    $mimetype = 'image/png';
 			    $modified = filemtime($default);
 			}
@@ -199,7 +201,8 @@ class Photo extends \Zotlabs\Web\Controller {
 				dbesc($photo),
 				intval($resolution)
 			);
-			if($r) {
+
+			if ($r) {
 				$allowed = (-1);
 				$filename = $r[0]['filename'];
 				$u = intval($r[0]['photo_usage']);
@@ -228,53 +231,40 @@ class Photo extends \Zotlabs\Web\Controller {
 					}
 				}
 
-				if($allowed === (-1))
+				if ($allowed === (-1)) {
 					$allowed = attach_can_view($r[0]['uid'], $observer_xchan, $photo, $bear);
+				}
 
-				$channel = channelx_by_n($r[0]['uid']);
+				if ($allowed) {
+					$expires = strtotime($r[0]['expires'] . 'Z');
+					$data = dbunescbin($r[0]['content']);
+					$filesize = $r[0]['filesize'];
+					$mimetype = $r[0]['mimetype'];
+					$modified = strtotime($r[0]['edited'] . 'Z');
 
-				// Now we'll see if we can access the photo
-				$e = q("SELECT * FROM photo WHERE resource_id = '%s' AND imgscale = %d LIMIT 1",
-					dbesc($photo),
-					intval($resolution)
-				);
-
-				$exists = (($e) ? true : false);
-
-				if($exists && $allowed) {
-					$expires = strtotime($e[0]['expires'] . 'Z');
-					$data = dbunescbin($e[0]['content']);
-					$filesize = $e[0]['filesize'];
-					$mimetype = $e[0]['mimetype'];
-					$modified = strtotime($e[0]['edited'] . 'Z');
-
-					if(intval($e[0]['os_storage']))
+					if(intval($r[0]['os_storage']))
 						$streaming = $data;
 
-					if($e[0]['allow_cid'] != '' || $e[0]['allow_gid'] != '' || $e[0]['deny_gid'] != '' || $e[0]['deny_gid'] != '')
+					if($r[0]['allow_cid'] != '' || $r[0]['allow_gid'] != '' || $r[0]['deny_cid'] != '' || $r[0]['deny_gid'] != '')
 						$prvcachecontrol = 'no-store, no-cache, must-revalidate';
 				}
 				else {
-					if(! $allowed) {
-						http_status_exit(403,'forbidden');
-					}
-					if(! $exists) {
-						http_status_exit(404,'not found');
-					}
-
+					http_status_exit(403,'forbidden');
 				}
 			}
-			else
+			else {
 				http_status_exit(404,'not found');
+			}
 		}
 
-		if(! $data)
+		if (!$data)
 			killme();
 
 		$etag = '"' . md5($data . $modified) . '"';
 
-		if($modified == 0)
+		if ($modified == 0) {
 		    $modified = time();
+		}
 
 		header_remove('Pragma');
 		if((isset($_SERVER['HTTP_IF_NONE_MATCH']) && $_SERVER['HTTP_IF_NONE_MATCH'] === $etag) || (!isset($_SERVER['HTTP_IF_NONE_MATCH']) && isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) && $_SERVER['HTTP_IF_MODIFIED_SINCE'] === gmdate("D, d M Y H:i:s", $modified) . " GMT")) {
@@ -312,8 +302,6 @@ class Photo extends \Zotlabs\Web\Controller {
 			// This has performance considerations but we highly recommend you
 			// leave it alone.
 
-
-
 			$maxage = $cache_mode['age'];
 
 			if($cache_mode['exp'] || (! isset($expires)) || (isset($expires) && $expires - 60 < time()))
@@ -338,10 +326,14 @@ class Photo extends \Zotlabs\Web\Controller {
 
 		// If it's a file resource, stream it.
 		if($streaming) {
-			if(strpos($streaming,'store') !== false)
+			if(strpos($streaming,'store') !== false) {
 				$istream = fopen($streaming,'rb');
-			else
+			}
+			else {
+				$channel = channelx_by_n($r[0]['uid']);
 				$istream = fopen('store/' . $channel['channel_address'] . '/' . $streaming,'rb');
+			}
+
 			$ostream = fopen('php://output','wb');
 			if($istream && $ostream) {
 				pipe_streams($istream,$ostream);
