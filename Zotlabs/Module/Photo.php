@@ -274,15 +274,6 @@ class Photo extends \Zotlabs\Web\Controller {
 			http_status_exit(304,'not modified');
 		}
 
-		if(isset($res) && intval($res) && $res < 500) {
-			$ph = photo_factory($data, $mimetype);
-			if($ph->is_valid()) {
-				$ph->scaleImageSquare($res);
-				$data = $ph->imageString();
-				$mimetype = $ph->getType();
-			}
-		}
-
 		if(isset($prvcachecontrol)) {
 
 			// it is a private photo that they have no permission to view.
