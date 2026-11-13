@@ -17,9 +17,13 @@ We are committed to working with security researchers to verify, reproduce, and 
 * Provide clear instructions on how to reproduce the issue, and if possible, a minimal Proof of Concept (PoC) exploit.
 * We will acknowledge your submission as soon as we can, and will keep you updated as it is being processed. We may ask for more information, or clarifications about the issue or the steps to reproduce it during this time.
 * We will assign a CVE to the issue once it is confirmed.
-* We will do our best to fix the issue as soon as we can after it has been confirmed. We request that information about the vulnerability or details about how to exploit it is not disclosed to other parties until after the fix is released and some time has passed, to allow site administrators to upgrade. We will normally make the CVE public one month after a fix has been released. (This grace period can differ based on severity, and can be negotiated.)
+* We will do our best to fix the issue as soon as we can after it has been confirmed. We request that information about the vulnerability or details about how to exploit it is not disclosed to other parties until after the fix is released and some time has passed, to allow site administrators to upgrade. We will normally make the vulnerability information available as soon as possible after it is patched.
 * Please perform all tests against a local instance of the software, and refrain from running any Denial of Service or automated testing tools against public hubs or the project managers (and their partners') infrastructure.
 * If the issue belongs to a third party module that we depend on, we may help with reporting it upstream if the submitter wants us to.
+
+## End of Life policy
+
+Hubzilla does not maintain old version of the software. Any updates, including security related fixes, will be applied to the latest release as found in the `master` branch of the respective repositories.
 
 ## Comments on this Policy
 
