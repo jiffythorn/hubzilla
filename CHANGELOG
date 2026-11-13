@@ -8,6 +8,8 @@ Hubzilla 12.0 (2026-??-??)
 	- Add ASObjectStorage class to safely support string values.
 
 	Maintenance
+	- Update security policy
+	- Remove unused photo resizing feature in mod photo
 	- Refactor Activity::update_poll() to utilize item_store_update() instead of custom update queries
 	- Streamline app icon color
 	- DB update 1273 to add a combined unique constraint on hubloc_hash and hubloc_url
@@ -46,6 +48,7 @@ Hubzilla 12.0 (2026-??-??)
 	- Refactor localize_item()
 
 	Bugfixes
+	- Fix performance issues in mod photo
 	- Fix email header separator - must be CRLF according to RFC5322
 	- Fix updates done within the same second dismissed
 	- Fix disabled state of some form elements if registration is not on duty
