@@ -2520,6 +2520,11 @@ function attach_move($channel_id, $resource_id, $new_folder_hash, $newname = '',
 		'resource_id' => $resource_id
 	];
 
+	if (str_contains($newname, '/')) {
+		$ret['message'] = t('Filename can not contain "/"');
+		return $ret;
+	}
+
 	$c = channelx_by_n($channel_id);
 	if(! ($c && $resource_id))
 		return $ret;
@@ -2724,6 +2729,11 @@ function attach_copy($channel_id, $resource_id, $new_folder_hash, $newname = '',
 		'success' => false,
 		'resource_id' => ''
 	];
+
+	if (str_contains($newname, '/')) {
+		$ret['message'] = t('Filename can not contain "/"');
+		return $ret;
+	}
 
 	$c = channelx_by_n($channel_id);
 	if(! ($c && $resource_id))

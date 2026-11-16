@@ -48,6 +48,8 @@ Hubzilla 12.0 (2026-??-??)
 	- Refactor localize_item()
 
 	Bugfixes
+	- Fix providing emty directory name creates empty file in files app
+	- Fix directory- or filename can contain slash - issue #2004
 	- Fix performance issues in mod photo
 	- Fix email header separator - must be CRLF according to RFC5322
 	- Fix updates done within the same second dismissed
