@@ -35,7 +35,7 @@ class File_upload extends \Zotlabs\Web\Controller {
 		$_POST['deny_cid']  = ((isset($_POST['contact_deny'])) ? perms2str($_POST['contact_deny']) : '');
 		$_POST['deny_gid']  = ((isset($_POST['group_deny'])) ? perms2str($_POST['group_deny']) : '');
 
-		if(isset($_POST['filename']) && strlen($_POST['filename'])) {
+		if(isset($_POST['filename'])) {
 			$r = attach_mkdir($channel, get_observer_hash(), $_POST);
 
 			if (!$r['success']) {
@@ -50,7 +50,6 @@ class File_upload extends \Zotlabs\Web\Controller {
 			}
 		}
 		else {
-
 			$matches = [];
 			$partial = false;
 

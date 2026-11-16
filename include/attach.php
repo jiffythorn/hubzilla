@@ -1213,19 +1213,26 @@ function attach_mkdir($channel, $observer_hash, $arr = null) {
 
 	$os_basepath .= '/';
 
-	if(! perm_is_allowed($channel_id, $observer_hash, 'write_storage')) {
-		$ret['message'] = t('Permission denied.');
-		return $ret;
-	}
-
-	if(empty($arr['filename'])) {
+	if (empty($arr['filename'])) {
+		logger('empty pathname');
 		$ret['message'] = t('Empty pathname');
 		return $ret;
 	}
 
-	if(mb_strlen($arr['filename'], 'UTF-8') > MAX_FOLDER_LENGTH) {
+	if (str_contains($arr['filename'], '/')) {
+		logger('pathname can not contain "/"');
+		$ret['message'] = t('Pathname can not contain "/"');
+		return $ret;
+	}
+
+	if (mb_strlen($arr['filename'], 'UTF-8') > MAX_FOLDER_LENGTH) {
 		logger('pathname too long');
 		$ret['message'] = t('Pathname too long');
+		return $ret;
+	}
+
+	if (!perm_is_allowed($channel_id, $observer_hash, 'write_storage')) {
+		$ret['message'] = t('Permission denied.');
 		return $ret;
 	}
 
@@ -2513,6 +2520,11 @@ function attach_move($channel_id, $resource_id, $new_folder_hash, $newname = '',
 		'resource_id' => $resource_id
 	];
 
+	if (str_contains($newname, '/')) {
+		$ret['message'] = t('Filename can not contain "/"');
+		return $ret;
+	}
+
 	$c = channelx_by_n($channel_id);
 	if(! ($c && $resource_id))
 		return $ret;
@@ -2717,6 +2729,11 @@ function attach_copy($channel_id, $resource_id, $new_folder_hash, $newname = '',
 		'success' => false,
 		'resource_id' => ''
 	];
+
+	if (str_contains($newname, '/')) {
+		$ret['message'] = t('Filename can not contain "/"');
+		return $ret;
+	}
 
 	$c = channelx_by_n($channel_id);
 	if(! ($c && $resource_id))
